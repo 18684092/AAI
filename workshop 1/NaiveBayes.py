@@ -40,7 +40,7 @@ class NaiveBayes:
             self.saveLearntText()
         elif test == "True":
             self.loadLearnt()
-            
+
     ##############
     # loadLearnt #
     ##############
