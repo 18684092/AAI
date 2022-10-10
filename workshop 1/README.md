@@ -40,7 +40,8 @@ P(H='normal'|PT='yes') = 6/9 = 0.667
 P(W='weak'|PT='no') = 2/5 = 0.4
 P(W='weak'|PT='yes') = 6/9 = 0.667
 P(W='strong'|PT='no') = 3/5 = 0.6
-P(W='strong'|PT='yes') = 3/9 = 0.333```
+P(W='strong'|PT='yes') = 3/9 = 0.333
+```
 
 
 or features can be binary...
@@ -114,4 +115,5 @@ P(Allergy='0'|Lung_cancer='1') = 732/1086 = 0.674
 P(Coughing='0'|Lung_cancer='0') = 283/414 = 0.684
 P(Coughing='0'|Lung_cancer='1') = 171/1086 = 0.157
 P(Coughing='1'|Lung_cancer='0') = 131/414 = 0.316
-P(Coughing='1'|Lung_cancer='1') = 915/1086 = 0.843```
+P(Coughing='1'|Lung_cancer='1') = 915/1086 = 0.843
+```
