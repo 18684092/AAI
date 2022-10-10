@@ -2,7 +2,7 @@
 
 ## Workshop 1 - NaiveBayes
 
-Implement own Naive Bayes in Python. Calculates discrete probabilities for all features, then calculates the probability of each feature given another features, **P(feature|given) = fraction = probability**.
+Implement own Naive Bayes in Python. Calculates discrete probabilities for all features, then calculates the probability of each feature given another features, **P(feature='option'|given='option') = fraction = probability**.
 
 So far it learns:
 
