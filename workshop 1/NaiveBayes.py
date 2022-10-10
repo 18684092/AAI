@@ -29,7 +29,7 @@ class NaiveBayes:
         self.learnt = {}
         self.df = None
  
-        # Do functions
+        # Do functions for learn or test mode
         if test == "False":
             self.df = pd.read_csv(fileName)
             self.countRows()
