@@ -80,8 +80,10 @@ class NaiveBayes:
                     for givenOption in self.discretes[self.given]:
                         result = self.df[[variable,self.given]]
                         givenCount = result[result[self.given] == givenOption].shape[0]
+                        # P(feature|given) = fraction = probability
                         result2 = result[(result[variable] == option) & (result[self.given] == givenOption)]
                         variableCount = result2.shape[0]
+                        # Store it dictionary
                         self.learnt["P(" + str(variable) +"='" + str(option) + "'|" + str(self.given) + "='" + str(givenOption) + "')" ] = (str(variableCount) + "/" + str(givenCount), float(variableCount / givenCount))
 
     ####################
@@ -106,6 +108,7 @@ class NaiveBayes:
         for variable in self.discretes:
             result = self.df[[variable]]
             result = result.reset_index()
+            # Count each feature and add a discrete probability
             for index, value in result.iterrows():
                 if value[1] not in self.discretes[variable]:
                     self.discretes[variable][value[1]] = {'total': 1, 'prob': float(0.0)}
@@ -134,6 +137,7 @@ class NaiveBayes:
 ########
 def main(argv):
 
+    # TODO redo cmd line processing
     try:
         if len(argv) == 0:
             NB = NaiveBayes()
