@@ -112,5 +112,4 @@ P(Allergy='0'|Lung_cancer='1') = 732/1086 = 0.674
 P(Coughing='0'|Lung_cancer='0') = 283/414 = 0.684
 P(Coughing='0'|Lung_cancer='1') = 171/1086 = 0.157
 P(Coughing='1'|Lung_cancer='0') = 131/414 = 0.316
-P(Coughing='1'|Lung_cancer='1') = 915/1086 = 0.843
-```
+P(Coughing='1'|Lung_cancer='1') = 915/1086 = 0.843```
