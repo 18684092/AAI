@@ -12,7 +12,9 @@ import sys
 import pandas as pd
 import json
 
-# Classes 
+###############
+# Naive Bayes #
+###############
 class NaiveBayes:
     def __init__(self, fileName='play_tennis-train.csv', given='PT', test="False"):
         self.fileName = fileName
