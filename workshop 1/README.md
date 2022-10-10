@@ -42,7 +42,9 @@ P(W='weak'|PT='yes') = 6/9 = 0.667
 P(W='strong'|PT='no') = 3/5 = 0.6
 P(W='strong'|PT='yes') = 3/9 = 0.333```
 
+
 or features can be binary...
+
 
 ```
 P(Smoking='0') = 363/1500 = 0.242
