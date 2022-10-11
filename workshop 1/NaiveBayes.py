@@ -40,7 +40,7 @@ class NaiveBayes:
             self.saveLearntText()
         elif test == "True":
             self.loadLearnt()
-            
+
     ##############
     # loadLearnt #
     ##############
@@ -69,6 +69,13 @@ class NaiveBayes:
     def displayLearnt(self):
         for item in self.learnt.items():
             print(item[0],"=",item[1][0],"=",round(item[1][1],3))
+
+    ###########
+    # predict #
+    ###########
+    def predict(self):
+
+        pass
 
     #########
     # learn # 
@@ -149,6 +156,7 @@ def main(argv):
             NB = NaiveBayes(argv[0], argv[1], argv[2])
 
         NB.displayLearnt()
+        #NB.displayDiscretes()
 
     except IndexError:
         print()
