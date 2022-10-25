@@ -43,6 +43,19 @@ P(W='strong'|PT='no') = 3/5 = 0.6
 P(W='strong'|PT='yes') = 3/9 = 0.333
 ```
 
+When predicting...
+
+```
+P(PT='no'|evidence) = P(PT='no') * P(O='sunny'|PT='no') * P(T='cool'|PT='no') * P(H='high'|PT='no') * P(W='strong'|PT='no')
+P(PT='yes'|evidence) = P(PT='yes') * P(O='sunny'|PT='yes') * P(T='cool'|PT='yes') * P(H='high'|PT='yes') * P(W='strong'|PT='yes')
+
+P(PT='no'|evidence) = 0.357 * 0.6 * 0.2 * 0.8 * 0.6 =  0.021
+P(PT='yes'|evidence) = 0.643 * 0.222 * 0.333 * 0.333 * 0.333 =  0.005
+
+P(PT='no'|evidence) = 0.795
+P(PT='yes'|evidence) = 0.205
+```
+
 
 or features can be binary...
 
