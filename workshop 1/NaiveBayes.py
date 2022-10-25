@@ -16,7 +16,7 @@ import json
 # Naive Bayes #
 ###############
 class NaiveBayes:
-    def __init__(self, fileName='play_tennis-train.csv', given='PT', test="False"):
+    def __init__(self, fileName='play_tennis-test.csv', given='PT', test="True"):
         self.fileName = fileName
         self.given = given
         self.test = test
@@ -28,9 +28,11 @@ class NaiveBayes:
         self.discretes = {}
         self.learnt = {}
         self.df = None
- 
+        self.variables = []
+        self.questions = []
+
         # Do functions for learn or test mode
-        if test == "False":
+        if self.test == "False":
             self.df = pd.read_csv(fileName)
             self.countRows()
             self.getDiscreteVariables()
@@ -38,28 +40,104 @@ class NaiveBayes:
             self.learn()
             self.saveLearnt()
             self.saveLearntText()
-        elif test == "True":
+            self.displayLearnt()
+        elif self.test == "True":
             self.loadLearnt()
+            self.readQuestions()
+            self.answerQuestion()
+
+    #################
+    # readQuestions #
+    #################
+    def readQuestions(self):
+        count = 0
+        with open(self.fileName, 'r') as f:
+            for line in f:
+                line = line.strip().split(',')
+                if count == 0:
+                    self.variables = line
+                else:
+                    self.questions.append(line)
+                count += 1
+
+    ##################
+    # answerQuestion #
+    ##################
+    def answerQuestion(self):
+        for question in self.questions:
+            q = ''
+            for index, option in enumerate(question):
+                if option == '?':
+                     q = self.variables[index] 
+                     break
+            # we have question q
+            answers = {}
+            for discrete in self.learnt.keys():
+                if "P("+q+"=" in discrete:
+                    answers[discrete] = [[discrete, self.learnt[discrete]]]
+                    for index, option in enumerate(question):
+                        if option != '?':
+                            answers[discrete].append(["P("+ self.variables[index] + "='" + option + "'|" + discrete[2:-1]+")", self.learnt["P("+ self.variables[index] + "='" + option + "'|" + discrete[2:-1]+")"]])
+            
+            # Build evidence strings for human output
+            for key in answers.keys():
+                print(key[0:-1]+"|evidence) = ", end='')
+                for index, p in enumerate(answers[key]):
+                    print(p[0], end='')
+                    if index < len(answers[key]) - 1:
+                        print(" * ", end='')
+                print()
+            print()
+
+            # Build evidence ouput showing joint probabilities
+            results = {}
+            for key in answers.keys():
+                print(key[0:-1]+"|evidence) = ", end='')
+                probability = 1
+                for index, p in enumerate(answers[key]):
+                    probability *= p[1][1] 
+                    print(round(p[1][1],3), end='')
+                    if index < len(answers[key]) - 1:
+                        print(" * ", end='')
+                print(" = ", round(probability,3))
+                results[key[0:-1]+"|evidence)"] = [probability]
+            print()
+
+
+            # Construct result
+            for key in results.keys():
+                for otherKey in results.keys():
+                    if otherKey != key:
+                        results[key].append(results[otherKey][0])
+
+            # Output result
+            for key in results.keys():
+                numerator = results[key][0]
+                denominator = sum(results[key])
+                results[key].append(numerator / denominator)
+                print(key + " = "  + str(round(results[key][-1],3)))
+                
+
 
     ##############
     # loadLearnt #
     ##############
     def loadLearnt(self):
-        with open(self.fileName + ".probs", 'r') as f:
+        with open("learnt", 'r') as f:
             self.learnt = json.load(f)
 
     ##############
     # saveLearnt #
     ##############
     def saveLearnt(self):
-        with open(self.fileName + ".probs", 'w') as f:
+        with open("learnt", 'w') as f:
             json.dump(self.learnt, f)
 
     ##################
     # saveLearntText #
     ################## 
     def saveLearntText(self):
-        with open(self.fileName + ".probs.txt", 'w') as fp:
+        with open("learnt.txt", 'w') as fp:
             for item in self.learnt.items():
                 fp.write(item[0] + " = " + item[1][0] + " = " + str(round(item[1][1],3)) +"\n")
 
@@ -70,12 +148,6 @@ class NaiveBayes:
         for item in self.learnt.items():
             print(item[0],"=",item[1][0],"=",round(item[1][1],3))
 
-    ###########
-    # predict #
-    ###########
-    def predict(self):
-
-        pass
 
     #########
     # learn # 
@@ -155,8 +227,6 @@ def main(argv):
         if len(argv) == 3:
             NB = NaiveBayes(argv[0], argv[1], argv[2])
 
-        NB.displayLearnt()
-        #NB.displayDiscretes()
 
     except IndexError:
         print()
@@ -172,4 +242,5 @@ def main(argv):
 # start properly #
 ##################
 if __name__ == "__main__":
+
    main(sys.argv[1:])
