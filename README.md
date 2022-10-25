@@ -45,6 +45,10 @@ P(W='strong'|PT='yes') = 3/9 = 0.333
 
 When predicting...
 
+```$ python "NaiveBayes.py" play_tennis-test.csv PT True```
+
+
+
 ```
 P(PT='no'|evidence) = P(PT='no') * P(O='sunny'|PT='no') * P(T='cool'|PT='no') * P(H='high'|PT='no') * P(W='strong'|PT='no')
 P(PT='yes'|evidence) = P(PT='yes') * P(O='sunny'|PT='yes') * P(T='cool'|PT='yes') * P(H='high'|PT='yes') * P(W='strong'|PT='yes')
