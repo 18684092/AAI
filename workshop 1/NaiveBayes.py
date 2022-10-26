@@ -20,6 +20,7 @@ class NaiveBayes:
         self.fileName = fileName
         self.given = given
         self.test = test
+        self.lap = 1
 
         # Total for 'given' dependent column
         self.total = 0
@@ -38,6 +39,7 @@ class NaiveBayes:
             self.learn()
             self.saveLearnt()
             self.saveLearntText()
+            print(self.discretes)
         elif test == "True":
             self.loadLearnt()
 
@@ -81,8 +83,16 @@ class NaiveBayes:
     # learn # 
     #########
     def learn(self):
+        print(self.discretes)
+        print()
+        print(self.discretes["T"])
+
+        print()
+        print()
         for variable in self.discretes:
+
             for option in self.discretes[variable]:
+                numberOptions = len(self.discretes[variable])
                 if variable != self.given:
                     for givenOption in self.discretes[self.given]:
                         result = self.df[[variable,self.given]]
