@@ -1,0 +1,50 @@
+TASK1
+a. 4/34
+b. 10/34
+c. 12/34
+d. 5/34
+e. 31/34
+f. 31/34
+g. 11/34
+h. P(sunny)=P(sunny∧hot)+P(sunny∧cold)=0.3+0.1=0.4
+i. P(hot)=P(hot∧sunny)+P(hot∧rainy)=0.3+0.1=0.4
+j. P(hot|sunny)=P(hot∧sunny)/P(sunny)=0.3/0.4=0.75
+k. P(rainy|cold)=P(rainy∧cold)/P(cold)=0.5/0.6=0.833
+l. P(x∧y)=P(x,y)=0.2
+m. P(X)=P(x∧y)+P(x∧-y)=0.2+0.3=0.5
+n. P(x∨y)=P(x∧y)+P(x∧-y)+P(-x∧y)=0.2+0.3+0.4=0.9
+o. P(X)=P(x∧y)+P(x∧-y)=0.2+0.3=0.5
+p. P(Y)=P(x∧y)+P(-x∧y)=0.2+0.4=0.6
+q. P(x|y)=P(x∧y)/P(y)=0.2/0.6=0.333
+r. P(¬x|y)P(-x∧y)/P(y)=0.4/0.6=0.666
+s. P(¬y|x)=P(-y∧x)/P(x)=0.3/0.5=0.6
+t. P(sun)= =0.3+0.1+0.1+0.15=0.65
+u. P(sun|winter)= =P(sun∧winter)/P(winter)=(0.1+0.15)/(0.1+0.05+0.15+0.2)=0.25/0.5=0.5
+v. P(sun|winter, hot)=P(sun∧winter∧hot)/P(winter∧hot)=0.1/(0.1+0.05)=0.1/0.15=0.666
+
+TASK2
+a.
+P(HamburgerEater|KJ) =0.9
+P(KJ)=1/100000=0.00001
+P(HamburgerEater)=0.5
+P(KJ|HamburgerEater)=[P(HamburgerEater|KJ)*P(KJ)]/P(HamburgerEater)=(0.9*0.00001)/0.5=0.000018
+
+b.
+P(d)=1/10000=0.0001
+P(t|d) =0.99
+P(¬t|¬d) =0.95
+P(d|t)= ( P(t | d)*P(d) ) / P(t)=(0.99*0.0001)/0.050094=0.00198
+
+from marginal probabilities we know that
+P(t)=P(t∧d)+P(t∧-d)=0.000099+0.049995=0.050094
+
+from joint probabilities and the product rule we know that
+P(t∧d)=P(t|d)*P(d)=0.99*0.0001=0.000099
+P(t∧-d)=P(t|-d)*P(-d)=0.05*0.9999=0.049995
+
+from conditional probabilities and complements of probabilities we know that
+if P(t|-d)+P(-t|-d)=1 and P(-t|-d) =0.95 then P(t|-d)=1-0.95=0.05
+if P(d)=0.0001 and P(d)+(-d)=1 then P(-d)=1-0.0001=0.9999
+
+TASK3
+Download NB_Classifier_v1.zip from Blackboard and follow the details in the workshop description.

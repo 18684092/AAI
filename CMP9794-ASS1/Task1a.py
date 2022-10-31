@@ -16,7 +16,7 @@ import json
 # Naive Bayes #
 ###############
 class NaiveBayes:
-    def __init__(self, fileName='play_tennis-test.csv', given='PT', test="True"):
+    def __init__(self, fileName='data/heart-data-discretized-test.csv', given='target', test="True"):
         self.fileName = fileName
         self.given = given
         self.test = test
@@ -33,7 +33,7 @@ class NaiveBayes:
 
         # Do functions for learn or test mode
         if self.test == "False":
-            self.df = pd.read_csv(fileName)
+            self.df = pd.read_csv(self.fileName)
             self.countRows()
             self.getDiscreteVariables()
             self.getDiscreteValues()
@@ -59,24 +59,28 @@ class NaiveBayes:
                 else:
                     self.questions.append(line)
                 count += 1
+        print(self.questions)
 
     ##################
     # answerQuestion #
     ##################
     def answerQuestion(self):
+        count = 0
+        correct = 0
         for question in self.questions:
-            q = ''
-            for index, option in enumerate(question):
-                if option == '?':
-                     q = self.variables[index] 
-                     break
+            q = 'target'
+            #for index, option in enumerate(question):
+            #    if option == '?':
+            #         q = self.variables[index] 
+            #         break
             # we have question q
+            
             answers = {}
             for discrete in self.learnt.keys():
                 if "P("+q+"=" in discrete:
                     answers[discrete] = [[discrete, self.learnt[discrete]]]
                     for index, option in enumerate(question):
-                        if option != '?':
+                        if self.variables[index] != q:
                             answers[discrete].append(["P("+ self.variables[index] + "='" + option + "'|" + discrete[2:-1]+")", self.learnt["P("+ self.variables[index] + "='" + option + "'|" + discrete[2:-1]+")"]])
             
             # Build evidence strings for human output
@@ -99,7 +103,7 @@ class NaiveBayes:
                     print(round(p[1][1],3), end='')
                     if index < len(answers[key]) - 1:
                         print(" * ", end='')
-                print(" = ", round(probability,3))
+                print(" = ", round(probability,8))
                 results[key[0:-1]+"|evidence)"] = [probability]
             print()
 
@@ -110,34 +114,52 @@ class NaiveBayes:
                     if otherKey != key:
                         results[key].append(results[otherKey][0])
 
-            # Output result
+            # Output normalised result
             for key in results.keys():
                 numerator = results[key][0]
                 denominator = sum(results[key])
                 results[key].append(numerator / denominator)
                 print(key + " = "  + str(round(results[key][-1],3)))
-                
 
+            # Get prediction, argmax
+            prediction = None
+            value = 0
+            for key in results.keys():
+                if results[key][2] > value:
+                    value = results[key][2]
+                    # Pull argmax value from within human readable form
+                    prediction = key.split('|')[0].replace('P('+q+'=','').replace("'",'')
+
+            # Make metric - will be accuracy        
+            count += 1
+            if prediction ==  question[-1]:
+                correct += 1
+            
+            print()
+
+        print("Correct predictions  : ", correct)
+        print("Number of predictions: ", count)
+        print("Accuracy = " , round(correct / count, 3))
 
     ##############
     # loadLearnt #
     ##############
     def loadLearnt(self):
-        with open("learnt", 'r') as f:
+        with open("results/learnt", 'r') as f:
             self.learnt = json.load(f)
 
     ##############
     # saveLearnt #
     ##############
     def saveLearnt(self):
-        with open("learnt", 'w') as f:
+        with open("results/learnt", 'w') as f:
             json.dump(self.learnt, f)
 
     ##################
     # saveLearntText #
     ################## 
     def saveLearntText(self):
-        with open("learnt.txt", 'w') as fp:
+        with open("results/learnt.txt", 'w') as fp:
             for item in self.learnt.items():
                 fp.write(item[0] + " = " + item[1][0] + " = " + str(round(item[1][1],3)) +"\n")
 
