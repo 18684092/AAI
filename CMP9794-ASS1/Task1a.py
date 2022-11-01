@@ -16,10 +16,13 @@ import json
 # Naive Bayes #
 ###############
 class NaiveBayes:
-    def __init__(self, fileName='data/heart-data-discretized-test.csv', given='target', test="True"):
+    def __init__(self, fileName, given, test, outFile, common ):
         self.fileName = fileName
         self.given = given
         self.test = test
+        self.outFile = outFile
+        self.commonSettings = common
+        
 
         # Total for 'given' dependent column
         self.total = 0
@@ -30,9 +33,10 @@ class NaiveBayes:
         self.df = None
         self.variables = []
         self.questions = []
-
+        print(self.test, type(self.test), self.fileName, self.outFile, self.given)
         # Do functions for learn or test mode
-        if self.test == "False":
+        if self.test == False:
+            print("here")
             self.df = pd.read_csv(self.fileName)
             self.countRows()
             self.getDiscreteVariables()
@@ -41,7 +45,7 @@ class NaiveBayes:
             self.saveLearnt()
             self.saveLearntText()
             self.displayLearnt()
-        elif self.test == "True":
+        elif self.test == True:
             self.loadLearnt()
             self.readQuestions()
             self.answerQuestion()
@@ -68,7 +72,7 @@ class NaiveBayes:
         count = 0
         correct = 0
         for question in self.questions:
-            q = 'target'
+            q = self.given
             #for index, option in enumerate(question):
             #    if option == '?':
             #         q = self.variables[index] 
@@ -100,10 +104,10 @@ class NaiveBayes:
                 probability = 1
                 for index, p in enumerate(answers[key]):
                     probability *= p[1][1] 
-                    print(round(p[1][1],3), end='')
+                    print(round(p[1][1],12), end='')
                     if index < len(answers[key]) - 1:
                         print(" * ", end='')
-                print(" = ", round(probability,8))
+                print(" = ", round(probability,12))
                 results[key[0:-1]+"|evidence)"] = [probability]
             print()
 
@@ -119,7 +123,7 @@ class NaiveBayes:
                 numerator = results[key][0]
                 denominator = sum(results[key])
                 results[key].append(numerator / denominator)
-                print(key + " = "  + str(round(results[key][-1],3)))
+                print(key + " = "  + str(round(results[key][-1],12)))
 
             # Get prediction, argmax
             prediction = None
@@ -134,32 +138,37 @@ class NaiveBayes:
             count += 1
             if prediction ==  question[-1]:
                 correct += 1
-            
+                print("Correct")
+            else:
+                print("Wrong")            
+
             print()
+
 
         print("Correct predictions  : ", correct)
         print("Number of predictions: ", count)
         print("Accuracy = " , round(correct / count, 3))
+        
 
     ##############
     # loadLearnt #
     ##############
     def loadLearnt(self):
-        with open("results/learnt", 'r') as f:
+        with open(self.outFile, 'r') as f:
             self.learnt = json.load(f)
 
     ##############
     # saveLearnt #
     ##############
     def saveLearnt(self):
-        with open("results/learnt", 'w') as f:
+        with open(self.outFile, 'w') as f:
             json.dump(self.learnt, f)
 
     ##################
     # saveLearntText #
     ################## 
     def saveLearntText(self):
-        with open("results/learnt.txt", 'w') as fp:
+        with open(self.outFile + ".txt", 'w') as fp:
             for item in self.learnt.items():
                 fp.write(item[0] + " = " + item[1][0] + " = " + str(round(item[1][1],3)) +"\n")
 
@@ -233,31 +242,69 @@ class NaiveBayes:
     def countRows(self):
         self.total = self.df.shape[0]
 
+###############
+# parseConfig #
+###############
+def parseConfig(config="Config.cfg"):
+    '''
+    Parses the config file and enters details into dictionaries.
+    The format is detailed within the config file.
+    '''
+    common = {}
+    bayesConfig = {}
+    commonFlag = False
+    fileNumber = 0
+    questionNumber = 0
+    with open(config, 'r') as f:
+        for line in f:
+            # Comments and blank lines are ignored
+            if line[0] == '#' or line[0] == '\n': continue
+            line = line.strip().split(':')
+
+            # Switch into common mode - these variables are for all models
+            if line[0].lower() == "common":
+                commonFlag = True
+                continue
+            # Switch into file mode. The variables control bayes reading and writing
+            if line[0].lower() == "file":
+                fileNumber += 1
+                commonFlag = False
+                continue 
+
+                # Store
+            if commonFlag:
+                common[line[0].lower()] = line[1].strip()
+            else:
+                if "question" in line[0].lower():
+                    questionNumber += 1
+                    bayesConfig[line[0].lower()+str(fileNumber) + "-" + str(questionNumber)] = line[1].strip()
+                else:
+                    bayesConfig[line[0].lower()+str(fileNumber)] = line[1].strip()
+
+    return common, bayesConfig
+
+
+
+
 ########
 # main #
 ########
 def main(argv):
+    common, bayesConfig = parseConfig()
+    for n in range(1, 2):
+        try:
+            # Learn and save results
+            NB = NaiveBayes(bayesConfig["learnfile" + str(n)], bayesConfig["given" + str(n)], False, bayesConfig["out" + str(n)], common)
+            # Test and save results
+            NB = NaiveBayes(bayesConfig["testfile" + str(n)], bayesConfig["given" + str(n)], True, bayesConfig["out" + str(n)], common)
+        except KeyError as e:
+            print()
+            print("All tests have been run. Please see results folder.", e)
+            quit()
+        else:
+            print(common)
+            print(bayesConfig)
 
-    # TODO redo cmd line processing
-    try:
-        if len(argv) == 0:
-            NB = NaiveBayes()
-        if len(argv) == 1:
-            NB = NaiveBayes(argv[0]) 
-        if len(argv) == 2:
-            NB = NaiveBayes(argv[0], argv[1])
-        if len(argv) == 3:
-            NB = NaiveBayes(argv[0], argv[1], argv[2])
-
-    except IndexError:
-        print()
-        print("Command line arguments are wrong")
-        print()
-        print("Usage:")
-        print("------")
-        print("/usr/bin/python NaiveBayes 'filename' 'given'")
-        print("\twhere 'given' is the feature name as part of P(condition|given)")
-        print()
 
 ##################
 # start properly #
