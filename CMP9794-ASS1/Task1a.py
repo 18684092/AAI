@@ -16,14 +16,14 @@ import json
 # Naive Bayes #
 ###############
 class NaiveBayes:
-    def __init__(self, fileName, given, test, outFile, common ):
+    def __init__(self, fileName, given, test, outFile, common, queries=None ):
         self.fileName = fileName
         self.given = given
         self.test = test
         self.outFile = outFile
         self.commonSettings = common
+        self.queries = queries
         
-
         # Total for 'given' dependent column
         self.total = 0
         
@@ -33,10 +33,9 @@ class NaiveBayes:
         self.df = None
         self.variables = []
         self.questions = []
-        print(self.test, type(self.test), self.fileName, self.outFile, self.given)
+        
         # Do functions for learn or test mode
         if self.test == False:
-            print("here")
             self.df = pd.read_csv(self.fileName)
             self.countRows()
             self.getDiscreteVariables()
@@ -50,11 +49,16 @@ class NaiveBayes:
             self.readQuestions()
             self.answerQuestion()
 
+    def show(self, line, endLine):
+        if self.commonSettings['display'] == True:
+            pass
+
     #################
     # readQuestions #
     #################
     def readQuestions(self):
         count = 0
+        # Read test file
         with open(self.fileName, 'r') as f:
             for line in f:
                 line = line.strip().split(',')
@@ -63,7 +67,6 @@ class NaiveBayes:
                 else:
                     self.questions.append(line)
                 count += 1
-        print(self.questions)
 
     ##################
     # answerQuestion #
@@ -71,13 +74,10 @@ class NaiveBayes:
     def answerQuestion(self):
         count = 0
         correct = 0
+
+        # Each question needs answering - they are P queries
         for question in self.questions:
             q = self.given
-            #for index, option in enumerate(question):
-            #    if option == '?':
-            #         q = self.variables[index] 
-            #         break
-            # we have question q
             
             answers = {}
             for discrete in self.learnt.keys():
@@ -89,7 +89,7 @@ class NaiveBayes:
             
             # Build evidence strings for human output
             for key in answers.keys():
-                print(key[0:-1]+"|evidence) = ", end='')
+                print(key[0:-1] + "|evidence) = ", end='')
                 for index, p in enumerate(answers[key]):
                     print(p[0], end='')
                     if index < len(answers[key]) - 1:
@@ -109,8 +109,6 @@ class NaiveBayes:
                         print(" * ", end='')
                 print(" = ", round(probability,12))
                 results[key[0:-1]+"|evidence)"] = [probability]
-            print()
-
 
             # Construct result
             for key in results.keys():
@@ -141,9 +139,7 @@ class NaiveBayes:
                 print("Correct")
             else:
                 print("Wrong")            
-
             print()
-
 
         print("Correct predictions  : ", correct)
         print("Number of predictions: ", count)
@@ -255,6 +251,7 @@ def parseConfig(config="Config.cfg"):
     commonFlag = False
     fileNumber = 0
     questionNumber = 0
+    questions = {}
     with open(config, 'r') as f:
         for line in f:
             # Comments and blank lines are ignored
@@ -277,11 +274,11 @@ def parseConfig(config="Config.cfg"):
             else:
                 if "question" in line[0].lower():
                     questionNumber += 1
-                    bayesConfig[line[0].lower()+str(fileNumber) + "-" + str(questionNumber)] = line[1].strip()
+                    questions[line[0].lower()+str(fileNumber) + "-" + str(questionNumber)] = line[1].strip()
                 else:
                     bayesConfig[line[0].lower()+str(fileNumber)] = line[1].strip()
 
-    return common, bayesConfig
+    return common, bayesConfig, questions
 
 
 
@@ -290,20 +287,26 @@ def parseConfig(config="Config.cfg"):
 # main #
 ########
 def main(argv):
-    common, bayesConfig = parseConfig()
-    for n in range(1, 2):
+    common, bayesConfig, questions = parseConfig()
+    for n in range(1, 3):
         try:
+            # Queries for this network
+            queries = [questions[key] for key in questions.keys() if "question"+str(n) in key]
             # Learn and save results
             NB = NaiveBayes(bayesConfig["learnfile" + str(n)], bayesConfig["given" + str(n)], False, bayesConfig["out" + str(n)], common)
             # Test and save results
-            NB = NaiveBayes(bayesConfig["testfile" + str(n)], bayesConfig["given" + str(n)], True, bayesConfig["out" + str(n)], common)
+            NB = NaiveBayes(bayesConfig["testfile" + str(n)], bayesConfig["given" + str(n)], True, bayesConfig["out" + str(n)], common, queries)
         except KeyError as e:
             print()
             print("All tests have been run. Please see results folder.", e)
             quit()
         else:
             print(common)
+            print()
             print(bayesConfig)
+            print()
+            print(questions)
+
 
 
 ##################
