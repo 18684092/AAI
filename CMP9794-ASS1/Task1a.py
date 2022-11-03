@@ -11,19 +11,29 @@ import sys
 # Other imports
 import pandas as pd
 import json
+import math
 
 ###############
 # Naive Bayes #
 ###############
 class NaiveBayes:
-    def __init__(self, fileName, given, test, outFile, common, queries=None ):
-        self.fileName = fileName
-        self.given = given
+    def __init__(self, bayesConfig, n, test, common, queries=None ):
+
+        # Configuration
+        self.bayesConfig = bayesConfig
+        self.number = n
+        self.fileName = self.bayesConfig["learnfile" + str(n)]
+        self.given = self.bayesConfig["given" + str(n)]
         self.test = test
-        self.outFile = outFile
+        self.outFile = self.bayesConfig["out" + str(n)]
         self.commonSettings = common
         self.queries = queries
-        
+
+        try:
+            self.dp = int(self.commonSettings['decimalplaces'])
+        except:
+            self.dp = 3
+
         # Total for 'given' dependent column
         self.total = 0
         
@@ -35,7 +45,7 @@ class NaiveBayes:
         self.questions = []
         
         # Do functions for learn or test mode
-        if self.test == False:
+        if not self.test:
             self.df = pd.read_csv(self.fileName)
             self.countRows()
             self.getDiscreteVariables()
@@ -44,14 +54,23 @@ class NaiveBayes:
             self.saveLearnt()
             self.saveLearntText()
             self.displayLearnt()
-        elif self.test == True:
+            #self.displayDiscretes()
+            
+        elif self.test:
             self.loadLearnt()
             self.readQuestions()
             self.answerQuestion()
 
-    def show(self, line, endLine):
-        if self.commonSettings['display'] == True:
-            pass
+    ########
+    # show #
+    ########
+    def show(self, line = '', endLine = '\n'):
+        if self.commonSettings['display'] == 'True':
+            print(str(line), end=endLine)
+        if self.commonSettings['logging'] == 'True':
+            with open(self.commonSettings['logfile'], 'a') as f:
+                f.write(str(line))
+                f.write(endLine)
 
     #################
     # readQuestions #
@@ -62,6 +81,7 @@ class NaiveBayes:
         with open(self.fileName, 'r') as f:
             for line in f:
                 line = line.strip().split(',')
+                #line = [value.replace(' ','_') for value in line] 
                 if count == 0:
                     self.variables = line
                 else:
@@ -74,6 +94,9 @@ class NaiveBayes:
     def answerQuestion(self):
         count = 0
         correct = 0
+        char = " * "
+        if self.commonSettings['log'] == 'True':
+            char = " + "
 
         # Each question needs answering - they are P queries
         for question in self.questions:
@@ -89,25 +112,35 @@ class NaiveBayes:
             
             # Build evidence strings for human output
             for key in answers.keys():
-                print(key[0:-1] + "|evidence) = ", end='')
+                self.show(key[0:-1] + "|evidence) = ", '')
                 for index, p in enumerate(answers[key]):
-                    print(p[0], end='')
+                    self.show(p[0], '')
                     if index < len(answers[key]) - 1:
-                        print(" * ", end='')
-                print()
-            print()
+                        self.show(char, '')
+                self.show('', '\n')
+            self.show('', '\n')
 
             # Build evidence ouput showing joint probabilities
             results = {}
+
             for key in answers.keys():
-                print(key[0:-1]+"|evidence) = ", end='')
-                probability = 1
+                self.show(key[0:-1] + "|evidence) = ", '')
+                if self.commonSettings['log'] == 'True':
+                    probability = 0
+
+                else: 
+                    probability = 1
                 for index, p in enumerate(answers[key]):
-                    probability *= p[1][1] 
-                    print(round(p[1][1],12), end='')
+                    eachOne = p[1][1]
+                    if self.commonSettings['log'] == 'True':
+                        eachOne = math.log(eachOne)
+                        probability +=  eachOne
+                    else:
+                        probability *=  eachOne
+                    self.show(round(eachOne, self.dp), '')
                     if index < len(answers[key]) - 1:
-                        print(" * ", end='')
-                print(" = ", round(probability,12))
+                        self.show(char, '')
+                self.show(" = " + str(round(probability, self.dp)))
                 results[key[0:-1]+"|evidence)"] = [probability]
 
             # Construct result
@@ -116,12 +149,17 @@ class NaiveBayes:
                     if otherKey != key:
                         results[key].append(results[otherKey][0])
 
+            self.show()
+
             # Output normalised result
             for key in results.keys():
+                if self.commonSettings['log'] == 'True':
+                    results[key][0] = math.exp(results[key][0])
+                    results[key][1] = math.exp(results[key][1])
                 numerator = results[key][0]
                 denominator = sum(results[key])
                 results[key].append(numerator / denominator)
-                print(key + " = "  + str(round(results[key][-1],12)))
+                self.show(key + " = "  + str(round(results[key][-1],self.dp)))
 
             # Get prediction, argmax
             prediction = None
@@ -136,14 +174,14 @@ class NaiveBayes:
             count += 1
             if prediction ==  question[-1]:
                 correct += 1
-                print("Correct")
+                self.show("Correct")
             else:
-                print("Wrong")            
-            print()
+                self.show("Wrong")            
+            self.show('')
 
-        print("Correct predictions  : ", correct)
-        print("Number of predictions: ", count)
-        print("Accuracy = " , round(correct / count, 3))
+        self.show("Correct predictions  : " + str(correct))
+        self.show("Number of predictions: " + str(count))
+        self.show("Accuracy = " + str(round(correct / count, self.dp)))
         
 
     ##############
@@ -166,14 +204,14 @@ class NaiveBayes:
     def saveLearntText(self):
         with open(self.outFile + ".txt", 'w') as fp:
             for item in self.learnt.items():
-                fp.write(item[0] + " = " + item[1][0] + " = " + str(round(item[1][1],3)) +"\n")
+                fp.write(item[0] + " = " + item[1][0] + " = " + str(round(item[1][1], self.dp)) +"\n")
 
     #################
     # displayLearnt #
     #################
     def displayLearnt(self):
         for item in self.learnt.items():
-            print(item[0],"=",item[1][0],"=",round(item[1][1],3))
+            self.show(item[0] + "=" + item[1][0] + "=" + str(round(item[1][1], self.dp)))
 
 
     #########
@@ -181,31 +219,52 @@ class NaiveBayes:
     #########
     def learn(self):
         for variable in self.discretes:
-            for option in self.discretes[variable]:
+            for attribute in self.discretes[variable]:
                 if variable != self.given:
                     for givenOption in self.discretes[self.given]:
                         result = self.df[[variable,self.given]]
                         givenCount = result[result[self.given] == givenOption].shape[0]
                         # P(feature|given) = fraction = probability
-                        result2 = result[(result[variable] == option) & (result[self.given] == givenOption)]
+                        result2 = result[(result[variable] == attribute) & (result[self.given] == givenOption)]
+                        result3 = result[(result[variable] == attribute)]
                         variableCount = result2.shape[0]
-                        # Store it dictionary
-                        self.learnt["P(" + str(variable) +"='" + str(option) + "'|" + str(self.given) + "='" + str(givenOption) + "')" ] = (str(variableCount) + "/" + str(givenCount), float(variableCount / givenCount))
+                        attributeCount = result3.shape[0]
+                        # Store in dictionary
+                        # There are 3 possible values when variable count = 0
+                        # No laplacian (hope there are no zeros)
+                        # Simple Laplacian - add a small value to avoid zero
+                        # Laplacian Smoothing - better
+                        if variableCount == 0:
+                            if self.commonSettings['laplaciansimple'] == 'True':
+                                self.learnt["P(" + str(variable) + "='" + str(attribute) + "'|" + str(self.given) + "='" + str(givenOption) + "')" ] = (str(variableCount) + "/" + str(givenCount), float((variableCount + float(self.commonSettings['simple']))/ givenCount))
+                            elif self.commonSettings['laplaciansimple'] == 'False':
+                                if self.commonSettings['laplaciansmoothe'] == 'False':
+                                    self.learnt["P(" + str(variable) + "='" + str(attribute) + "'|" + str(self.given) + "='" + str(givenOption) + "')" ] = (str(variableCount) + "/" + str(givenCount), float(variableCount / givenCount))
+                                elif self.commonSettings['laplaciansmoothe'] == 'True':
+                                    self.learnt["P(" + str(variable) + "='" + str(attribute) + "'|" + str(self.given) + "='" + str(givenOption) + "')" ] = (str(variableCount) + "/" + str(givenCount), float((variableCount + float(self.commonSettings['laplacian'])) / (givenCount + (float(self.commonSettings['laplacian']) * attributeCount))))
+                        else:
+                            # Two options here, Laplacian smoothing or not
+                            # Because there are no zeros we are safe to not use Laplacian
+                            # ...but we can use Laplacian
+                            if self.commonSettings['laplaciansmoothe'] == 'False':
+                                self.learnt["P(" + str(variable) + "='" + str(attribute) + "'|" + str(self.given) + "='" + str(givenOption) + "')" ] = (str(variableCount) + "/" + str(givenCount), float(variableCount / givenCount))
+                            else:
+                                self.learnt["P(" + str(variable) + "='" + str(attribute) + "'|" + str(self.given) + "='" + str(givenOption) + "')" ] = (str(variableCount) + "/" + str(givenCount), float((variableCount + float(self.commonSettings['laplacian'])) / (givenCount + (float(self.commonSettings['laplacian']) * attributeCount))))
 
     ####################
     # displayDiscretes #
     ####################
     def displayDiscretes(self):
-        print("Discrete variables and probabilities for: ", self.fileName)
-        print("Total samples:", self.total)
-        print()
+        self.show("Discrete variables and probabilities for: " + str(self.fileName))
+        self.show("Total samples:" + str(self.total))
+        self.show()
         for variable in self.discretes:
-            print("Var:", variable)
+            self.show("Var:" + str(variable))
             for option in self.discretes[variable]:
-                print("\tOption: ", option)
-                print("\tTotal: ",self.discretes[variable][option]['total'])
-                print("\tProb : ",round(self.discretes[variable][option]['prob'], 4))
-                print()
+                self.show("\tAttribute: " + str(option))
+                self.show("\tTotal: " + str(self.discretes[variable][option]['total']))
+                self.show("\tProb : " + str(round(self.discretes[variable][option]['prob'], self.dp)))
+                self.show()
 
     #####################
     # getDiscreteValues #
@@ -217,8 +276,8 @@ class NaiveBayes:
             # Count each feature and add a discrete probability
             for index, value in result.iterrows():
                 if value[1] not in self.discretes[variable]:
-                    self.discretes[variable][value[1]] = {'total': 1, 'prob': float(0.0)}
-                    self.learnt["P(" + str(variable) + "='" + str(value[1]) + "')"] = ("0/0", float(0.0))
+                    self.discretes[variable][value[1]] = {'total': 1, 'prob': float(1/self.total)}
+                    self.learnt["P(" + str(variable) + "='" + str(value[1]) + "')"] = ("1/"+str(self.total), float(1/self.total))
                 else:
                     self.discretes[variable][value[1]]['total'] += 1
                     self.discretes[variable][value[1]]['prob'] = self.discretes[variable][value[1]]['total'] / self.total
@@ -288,14 +347,17 @@ def parseConfig(config="Config.cfg"):
 ########
 def main(argv):
     common, bayesConfig, questions = parseConfig()
+    
+    open(common['logfile'], 'w').close()
+    
     for n in range(1, 3):
         try:
             # Queries for this network
             queries = [questions[key] for key in questions.keys() if "question"+str(n) in key]
             # Learn and save results
-            NB = NaiveBayes(bayesConfig["learnfile" + str(n)], bayesConfig["given" + str(n)], False, bayesConfig["out" + str(n)], common)
+            NB = NaiveBayes(bayesConfig, n, False, common)
             # Test and save results
-            NB = NaiveBayes(bayesConfig["testfile" + str(n)], bayesConfig["given" + str(n)], True, bayesConfig["out" + str(n)], common, queries)
+            NB = NaiveBayes(bayesConfig, n, True, common, queries)
         except KeyError as e:
             print()
             print("All tests have been run. Please see results folder.", e)
