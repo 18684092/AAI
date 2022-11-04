@@ -28,6 +28,8 @@ class NaiveBayes:
         self.outFile = self.bayesConfig["out" + str(n)]
         self.commonSettings = common
         self.queries = queries
+        self.structure = self.bayesConfig["structure" + str(n)]
+        self.listVars = []
 
         try:
             self.dp = int(self.commonSettings['decimalplaces'])
@@ -46,7 +48,7 @@ class NaiveBayes:
         
         # Do functions for learn or test mode
         if not self.test:
-            self.df = pd.read_csv(self.fileName)
+            self.makeStructure()
             self.countRows()
             self.getDiscreteVariables()
             self.getDiscreteValues()
@@ -57,9 +59,33 @@ class NaiveBayes:
             #self.displayDiscretes()
             
         elif self.test:
+            self.makeStructure()
             self.loadLearnt()
             self.readQuestions()
             self.answerQuestion()
+
+    ##################
+    # parseStructure #
+    ##################
+    def parseStructure(self):
+        s = self.structure
+        s = s.replace('|', ',')
+        s = s.replace('P(', '')
+        s = s.replace(')', '')
+        self.listVars = s.split(',')
+
+
+    #################
+    # makeStructure #
+    #################
+    def makeStructure(self):
+        '''
+        Reads in train or test file and removes 
+        variables that are not in the structure.
+        '''
+        self.df = pd.read_csv(self.fileName)
+        self.parseStructure()
+        self.df = self.df[self.listVars]
 
     ########
     # show #
@@ -77,16 +103,30 @@ class NaiveBayes:
     #################
     def readQuestions(self):
         count = 0
+        removedVars = []
         # Read test file
         with open(self.fileName, 'r') as f:
             for line in f:
                 line = line.strip().split(',')
-                #line = [value.replace(' ','_') for value in line] 
                 if count == 0:
                     self.variables = line
+                    print("listVars",self.listVars)
+                    print("variables",self.variables)
+                    for index,var in enumerate(self.variables):
+                        print(index, var)
+                        if var not in self.listVars:
+                            print("removed:", var, index)
+                            self.variables.remove(var)
+                            removedVars.append(index)
+                    print("after remove", self.variables)
                 else:
+                    for i in removedVars:
+                        line.pop(i)
+                    if count == 1:
+                        print(line)
                     self.questions.append(line)
                 count += 1
+
 
     ##################
     # answerQuestion #
@@ -309,8 +349,8 @@ def parseConfig(config="Config.cfg"):
     bayesConfig = {}
     commonFlag = False
     fileNumber = 0
-    questionNumber = 0
-    questions = {}
+    queryNumber = 0
+    queries = {}
     with open(config, 'r') as f:
         for line in f:
             # Comments and blank lines are ignored
@@ -321,23 +361,24 @@ def parseConfig(config="Config.cfg"):
             if line[0].lower() == "common":
                 commonFlag = True
                 continue
+
             # Switch into file mode. The variables control bayes reading and writing
             if line[0].lower() == "file":
                 fileNumber += 1
                 commonFlag = False
                 continue 
 
-                # Store
+            # Store
             if commonFlag:
                 common[line[0].lower()] = line[1].strip()
             else:
-                if "question" in line[0].lower():
-                    questionNumber += 1
-                    questions[line[0].lower()+str(fileNumber) + "-" + str(questionNumber)] = line[1].strip()
+                if "query" in line[0].lower():
+                    queryNumber += 1
+                    queries[line[0].lower()+str(fileNumber) + "-" + str(queryNumber)] = line[1].strip()
                 else:
                     bayesConfig[line[0].lower()+str(fileNumber)] = line[1].strip()
 
-    return common, bayesConfig, questions
+    return common, bayesConfig, queries
 
 
 
@@ -346,18 +387,18 @@ def parseConfig(config="Config.cfg"):
 # main #
 ########
 def main(argv):
-    common, bayesConfig, questions = parseConfig()
+    common, bayesConfig, queries = parseConfig()
     
     open(common['logfile'], 'w').close()
     
     for n in range(1, 3):
         try:
             # Queries for this network
-            queries = [questions[key] for key in questions.keys() if "question"+str(n) in key]
+            q = [queries[key] for key in queries.keys() if "query"+str(n) in key]
             # Learn and save results
             NB = NaiveBayes(bayesConfig, n, False, common)
             # Test and save results
-            NB = NaiveBayes(bayesConfig, n, True, common, queries)
+            NB = NaiveBayes(bayesConfig, n, True, common, q)
         except KeyError as e:
             print()
             print("All tests have been run. Please see results folder.", e)
@@ -367,7 +408,7 @@ def main(argv):
             print()
             print(bayesConfig)
             print()
-            print(questions)
+            print(queries)
 
 
 

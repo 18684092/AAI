@@ -1,3 +1,5 @@
+P(stroke='1') = 209/4151 = 0.05
+P(stroke='0') = 3942/4151 = 0.95
 P(gender='Male') = 1719/4151 = 0.414
 P(gender='Female') = 2431/4151 = 0.586
 P(gender='Other') = 1/4151 = 0.0
@@ -33,8 +35,6 @@ P(smoking_status='formerly smoked') = 724/4151 = 0.174
 P(smoking_status='never smoked') = 1544/4151 = 0.372
 P(smoking_status='smokes') = 624/4151 = 0.15
 P(smoking_status='Unknown') = 1259/4151 = 0.303
-P(stroke='1') = 209/4151 = 0.05
-P(stroke='0') = 3942/4151 = 0.95
 P(gender='Male'|stroke='1') = 94/209 = 0.049
 P(gender='Male'|stroke='0') = 1625/3942 = 0.287
 P(gender='Female'|stroke='1') = 115/209 = 0.044
