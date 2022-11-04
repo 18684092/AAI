@@ -5,11 +5,14 @@
 # Date          :   9th October 2022                 #
 ######################################################
 
-# Standard imports
-import sys
-import pandas as pd
 import json
 import math
+
+import sys
+
+import pandas as pd
+from sklearn.metrics import confusion_matrix
+
 
 ###############
 # Naive Bayes #
@@ -61,7 +64,7 @@ class NaiveBayes:
             self.makeStructure(self.fileNameTest)
             self.loadLearnt()
             self.readQuestions()
-            self.answerQuestion()
+            self.answerQuestions()
 
     ##################
     # parseStructure #
@@ -207,10 +210,12 @@ class NaiveBayes:
     ##################
     # answerQuestion #
     ##################
-    def answerQuestion(self):
+    def answerQuestions(self):
         count = 0
         correct = 0
-        
+        y = []
+        yHat = []
+
         # Get position of the given variable
         qPosition = self.getQPos()
 
@@ -229,6 +234,8 @@ class NaiveBayes:
             prediction = self.argMaxPrediction(results)
             # Make metric - will be accuracy        
             count += 1
+            y.append(question[qPosition])
+            yHat.append(prediction)
             if prediction ==  question[qPosition]:
                 correct += 1
                 self.show("Correct")
@@ -240,7 +247,9 @@ class NaiveBayes:
         self.show("Number of predictions: " + str(count))
         self.show("Accuracy = " + str(round(correct / count, self.dp)))
         self.show()
-        
+        tn, fp, fn, tp = confusion_matrix(y, yHat).ravel()
+        print(tn, fp, fn, tp)
+
     ##############
     # loadLearnt #
     ##############
@@ -419,12 +428,12 @@ def main(argv):
             print()
             print("All tests have been run. Please see results folder.", e)
             quit()
-        else:
-            print(common)
-            print()
-            print(bayesConfig)
-            print()
-            print(queries)
+        #else:
+        #    print(common)
+        #    print()
+        #    print(bayesConfig)
+        #    print()
+        #    print(queries)
 
 ##################
 # start properly #
