@@ -7,8 +7,6 @@
 
 # Standard imports
 import sys
-
-# Other imports
 import pandas as pd
 import json
 import math
@@ -23,6 +21,7 @@ class NaiveBayes:
         self.bayesConfig = bayesConfig
         self.number = n
         self.fileName = self.bayesConfig["learnfile" + str(n)]
+        self.fileNameTest = self.bayesConfig["testfile" + str(n)]
         self.given = self.bayesConfig["given" + str(n)]
         self.test = test
         self.outFile = self.bayesConfig["out" + str(n)]
@@ -48,7 +47,7 @@ class NaiveBayes:
         
         # Do functions for learn or test mode
         if not self.test:
-            self.makeStructure()
+            self.makeStructure(self.fileName)
             self.countRows()
             self.getDiscreteVariables()
             self.getDiscreteValues()
@@ -59,7 +58,7 @@ class NaiveBayes:
             #self.displayDiscretes()
             
         elif self.test:
-            self.makeStructure()
+            self.makeStructure(self.fileNameTest)
             self.loadLearnt()
             self.readQuestions()
             self.answerQuestion()
@@ -74,16 +73,15 @@ class NaiveBayes:
         s = s.replace(')', '')
         self.listVars = s.split(',')
 
-
     #################
     # makeStructure #
     #################
-    def makeStructure(self):
+    def makeStructure(self, fileName):
         '''
         Reads in train or test file and removes 
         variables that are not in the structure.
         '''
-        self.df = pd.read_csv(self.fileName)
+        self.df = pd.read_csv(fileName)
         self.parseStructure()
         self.df = self.df[self.listVars]
 
@@ -102,31 +100,109 @@ class NaiveBayes:
     # readQuestions #
     #################
     def readQuestions(self):
-        count = 0
-        removedVars = []
-        # Read test file
-        with open(self.fileName, 'r') as f:
-            for line in f:
-                line = line.strip().split(',')
-                
-                if count == 0:
-                    print(self.listVars)
-                    for index,var in enumerate(line):
-                        if var not in self.listVars:
-                            removedVars.append(index)
-                            
-                    for i in removedVars:
-                        line.pop(i)
-                    self.variables = line    
+        self.variables = list(self.df.columns)
+        for index, row in self.df.iterrows():
+            self.questions.append(list(map(str,row.tolist())))
 
+    ###########  
+    # getQPos #
+    ###########  
+    def getQPos(self):
+        qPosition = 0
+        for i, v in enumerate(self.variables):
+            if v == self.given:
+                return i
+
+    ##############
+    # getAnswers #
+    ##############
+    def getAnswers(self, question):
+        answers = {}
+        for discrete in self.learnt.keys():
+            if "P(" + self.given + "=" in discrete:
+                answers[discrete] = [[discrete, self.learnt[discrete]]]
+                for index, option in enumerate(question):
+                    if self.variables[index] != self.given:
+                        answers[discrete].append(["P("+ self.variables[index] + "='" + option + "'|" + discrete[2:-1]+")", self.learnt["P("+ self.variables[index] + "='" + option + "'|" + discrete[2:-1]+")"]])
+        return answers
+
+    ###################
+    # displayEvidence #
+    ###################
+    def displayEvidence(self, answers, char):
+        # Build evidence strings for human output
+        for key in answers.keys():
+            self.show(key[0:-1] + "|evidence) = ", '')
+            for index, p in enumerate(answers[key]):
+                self.show(p[0], '')
+                if index < len(answers[key]) - 1:
+                    self.show(char, '')
+            self.show('', '\n')
+        self.show('', '\n')
+
+    ####################
+    # enumerateAnswers #
+    ####################
+    def enumerateAnswers(self, answers, char):
+        results = {}
+        for key in answers.keys():
+            self.show(key[0:-1] + "|evidence) = ", '')
+            if self.commonSettings['log'] == 'True':
+                probability = 0
+            else: 
+                probability = 1
+            for index, p in enumerate(answers[key]):
+                eachOne = p[1][1]
+                if self.commonSettings['log'] == 'True':
+                    eachOne = math.log(eachOne)
+                    probability +=  eachOne
                 else:
-                    for i in removedVars:
-                        line.pop(i)
-                    self.questions.append(line)
-                count += 1
-        print(removedVars)
-        print(self.variables)
+                    probability *=  eachOne
+                self.show(round(eachOne, self.dp), '')
+                if index < len(answers[key]) - 1:
+                    self.show(char, '')
+            self.show(" = " + str(round(probability, self.dp)))
+            results[key[0:-1]+"|evidence)"] = [probability]
+        return results    
 
+    ###################
+    # constructResult #
+    ###################
+    def constructResult(self, results):
+        for key in results.keys():
+            for otherKey in results.keys():
+                if otherKey != key:
+                    results[key].append(results[otherKey][0])
+        return results
+
+    ####################
+    # normaliseResults #
+    ####################
+    def normaliseResults(self, results):
+        # Output normalised result
+        self.show()
+        for key in results.keys():
+            if self.commonSettings['log'] == 'True':
+                results[key][0] = math.exp(results[key][0])
+                results[key][1] = math.exp(results[key][1])
+            numerator = results[key][0]
+            denominator = sum(results[key])
+            results[key].append(numerator / denominator)
+            self.show(key + " = "  + str(round(results[key][-1],self.dp)))
+        return results
+
+    ####################
+    # argMaxPrediction #
+    ####################
+    def argMaxPrediction(self, results):
+        prediction = None
+        value = 0
+        for key in results.keys():
+            if results[key][2] > value:
+                value = results[key][2]
+                # Pull argmax value from within human readable form
+                prediction = key.split('|')[0].replace('P(' + self.given + '=','').replace("'",'')
+        return prediction
 
     ##################
     # answerQuestion #
@@ -134,85 +210,26 @@ class NaiveBayes:
     def answerQuestion(self):
         count = 0
         correct = 0
-        char = " * "
+        
+        # Get position of the given variable
+        qPosition = self.getQPos()
+
+        # Log and standard have different math operations
+        char = " * "    
         if self.commonSettings['log'] == 'True':
             char = " + "
 
         # Each question needs answering - they are P queries
         for question in self.questions:
-            q = self.given
-            
-            answers = {}
-            for discrete in self.learnt.keys():
-                if "P("+q+"=" in discrete:
-                    answers[discrete] = [[discrete, self.learnt[discrete]]]
-                    for index, option in enumerate(question):
-                        if self.variables[index] != q:
-                            answers[discrete].append(["P("+ self.variables[index] + "='" + option + "'|" + discrete[2:-1]+")", self.learnt["P("+ self.variables[index] + "='" + option + "'|" + discrete[2:-1]+")"]])
-            
-            # Build evidence strings for human output
-            for key in answers.keys():
-                self.show(key[0:-1] + "|evidence) = ", '')
-                for index, p in enumerate(answers[key]):
-                    self.show(p[0], '')
-                    if index < len(answers[key]) - 1:
-                        self.show(char, '')
-                self.show('', '\n')
-            self.show('', '\n')
-
-            # Build evidence ouput showing joint probabilities
-            results = {}
-
-            for key in answers.keys():
-                self.show(key[0:-1] + "|evidence) = ", '')
-                if self.commonSettings['log'] == 'True':
-                    probability = 0
-
-                else: 
-                    probability = 1
-                for index, p in enumerate(answers[key]):
-                    eachOne = p[1][1]
-                    if self.commonSettings['log'] == 'True':
-                        eachOne = math.log(eachOne)
-                        probability +=  eachOne
-                    else:
-                        probability *=  eachOne
-                    self.show(round(eachOne, self.dp), '')
-                    if index < len(answers[key]) - 1:
-                        self.show(char, '')
-                self.show(" = " + str(round(probability, self.dp)))
-                results[key[0:-1]+"|evidence)"] = [probability]
-
-            # Construct result
-            for key in results.keys():
-                for otherKey in results.keys():
-                    if otherKey != key:
-                        results[key].append(results[otherKey][0])
-
-            self.show()
-
-            # Output normalised result
-            for key in results.keys():
-                if self.commonSettings['log'] == 'True':
-                    results[key][0] = math.exp(results[key][0])
-                    results[key][1] = math.exp(results[key][1])
-                numerator = results[key][0]
-                denominator = sum(results[key])
-                results[key].append(numerator / denominator)
-                self.show(key + " = "  + str(round(results[key][-1],self.dp)))
-
-            # Get prediction, argmax
-            prediction = None
-            value = 0
-            for key in results.keys():
-                if results[key][2] > value:
-                    value = results[key][2]
-                    # Pull argmax value from within human readable form
-                    prediction = key.split('|')[0].replace('P('+q+'=','').replace("'",'')
-
+            answers = self.getAnswers(question)
+            self.displayEvidence(answers, char)
+            results = self.enumerateAnswers(answers, char)
+            results = self.constructResult(results)
+            results = self.normaliseResults(results)
+            prediction = self.argMaxPrediction(results)
             # Make metric - will be accuracy        
             count += 1
-            if prediction ==  question[-1]:
+            if prediction ==  question[qPosition]:
                 correct += 1
                 self.show("Correct")
             else:
@@ -222,8 +239,8 @@ class NaiveBayes:
         self.show("Correct predictions  : " + str(correct))
         self.show("Number of predictions: " + str(count))
         self.show("Accuracy = " + str(round(correct / count, self.dp)))
+        self.show()
         
-
     ##############
     # loadLearnt #
     ##############
@@ -253,7 +270,6 @@ class NaiveBayes:
         for item in self.learnt.items():
             self.show(item[0] + "=" + item[1][0] + "=" + str(round(item[1][1], self.dp)))
 
-
     #########
     # learn # 
     #########
@@ -269,11 +285,7 @@ class NaiveBayes:
                         result3 = result[(result[variable] == attribute)]
                         variableCount = result2.shape[0]
                         attributeCount = result3.shape[0]
-                        # Store in dictionary
                         # There are 3 possible values when variable count = 0
-                        # No laplacian (hope there are no zeros)
-                        # Simple Laplacian - add a small value to avoid zero
-                        # Laplacian Smoothing - better
                         if variableCount == 0:
                             if self.commonSettings['laplaciansimple'] == 'True':
                                 self.learnt["P(" + str(variable) + "='" + str(attribute) + "'|" + str(self.given) + "='" + str(givenOption) + "')" ] = (str(variableCount) + "/" + str(givenCount), float((variableCount + float(self.commonSettings['simple']))/ givenCount))
@@ -284,8 +296,6 @@ class NaiveBayes:
                                     self.learnt["P(" + str(variable) + "='" + str(attribute) + "'|" + str(self.given) + "='" + str(givenOption) + "')" ] = (str(variableCount) + "/" + str(givenCount), float((variableCount + float(self.commonSettings['laplacian'])) / (givenCount + (float(self.commonSettings['laplacian']) * attributeCount))))
                         else:
                             # Two options here, Laplacian smoothing or not
-                            # Because there are no zeros we are safe to not use Laplacian
-                            # ...but we can use Laplacian
                             if self.commonSettings['laplaciansmoothe'] == 'False':
                                 self.learnt["P(" + str(variable) + "='" + str(attribute) + "'|" + str(self.given) + "='" + str(givenOption) + "')" ] = (str(variableCount) + "/" + str(givenCount), float(variableCount / givenCount))
                             else:
@@ -372,6 +382,7 @@ def parseConfig(config="Config.cfg"):
             if commonFlag:
                 common[line[0].lower()] = line[1].strip()
             else:
+                # Each query and file name gets a number
                 if "query" in line[0].lower():
                     queryNumber += 1
                     queries[line[0].lower()+str(fileNumber) + "-" + str(queryNumber)] = line[1].strip()
@@ -380,25 +391,30 @@ def parseConfig(config="Config.cfg"):
 
     return common, bayesConfig, queries
 
-
-
-
 ########
 # main #
 ########
 def main(argv):
+
+    # Config is own format
     common, bayesConfig, queries = parseConfig()
     
+    # Clear log file on run
     open(common['logfile'], 'w').close()
     
-    for n in range(1, 2):
+    # NOTE reduce 10 to number of files in config
+    # needs to be automated 
+    for n in range(1, 10):
         try:
             # Queries for this network
             q = [queries[key] for key in queries.keys() if "query"+str(n) in key]
+        
             # Learn and save results
             NB = NaiveBayes(bayesConfig, n, False, common)
             # Test and save results
             NB = NaiveBayes(bayesConfig, n, True, common, q)
+        
+        # Only need except due to for loop
         except KeyError as e:
             print()
             print("All tests have been run. Please see results folder.", e)
@@ -410,11 +426,8 @@ def main(argv):
             print()
             print(queries)
 
-
-
 ##################
 # start properly #
 ##################
 if __name__ == "__main__":
-
    main(sys.argv[1:])
