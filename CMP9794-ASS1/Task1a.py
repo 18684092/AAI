@@ -108,24 +108,24 @@ class NaiveBayes:
         with open(self.fileName, 'r') as f:
             for line in f:
                 line = line.strip().split(',')
+                
                 if count == 0:
-                    self.variables = line
-                    print("listVars",self.listVars)
-                    print("variables",self.variables)
-                    for index,var in enumerate(self.variables):
-                        print(index, var)
+                    print(self.listVars)
+                    for index,var in enumerate(line):
                         if var not in self.listVars:
-                            print("removed:", var, index)
-                            self.variables.remove(var)
                             removedVars.append(index)
-                    print("after remove", self.variables)
+                            
+                    for i in removedVars:
+                        line.pop(i)
+                    self.variables = line    
+
                 else:
                     for i in removedVars:
                         line.pop(i)
-                    if count == 1:
-                        print(line)
                     self.questions.append(line)
                 count += 1
+        print(removedVars)
+        print(self.variables)
 
 
     ##################
@@ -391,7 +391,7 @@ def main(argv):
     
     open(common['logfile'], 'w').close()
     
-    for n in range(1, 3):
+    for n in range(1, 2):
         try:
             # Queries for this network
             q = [queries[key] for key in queries.keys() if "query"+str(n) in key]
