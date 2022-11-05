@@ -66,8 +66,6 @@ class NaiveBayes:
             self.readQuestions()
             self.answerQuestions()
 
-
-
     ##################
     # parseStructure #
     ##################
@@ -141,8 +139,8 @@ class NaiveBayes:
                 self.show(p[0], '')
                 if index < len(answers[key]) - 1:
                     self.show(char, '')
-            self.show('', '\n')
-        self.show('', '\n')
+            self.show()
+        self.show()
 
     ####################
     # enumerateAnswers #
@@ -212,6 +210,8 @@ class NaiveBayes:
     # answerQuestion #
     ##################
     def answerQuestions(self):
+
+        # For basic metrics
         count = 0
         correct = 0
         y = []
@@ -242,7 +242,7 @@ class NaiveBayes:
                 self.show("Correct")
             else:
                 self.show("Wrong")            
-            self.show('')
+            self.show()
 
         self.show("Correct predictions  : " + str(correct))
         self.show("Number of predictions: " + str(count))
