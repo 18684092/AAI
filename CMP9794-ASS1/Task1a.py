@@ -103,7 +103,6 @@ class NaiveBayes:
         variables that are not in the structure.
         '''
         self.df = pd.read_csv(fileName)
-
         self.df = self.df[self.listVars]
 
     ########
