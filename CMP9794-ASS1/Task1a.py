@@ -25,13 +25,15 @@ class NaiveBayes:
         self.number = n
         self.fileName = self.bayesConfig["learnfile" + str(n)]
         self.fileNameTest = self.bayesConfig["testfile" + str(n)]
-        self.given = self.bayesConfig["given" + str(n)]
+        
         self.test = test
         self.outFile = self.bayesConfig["out" + str(n)]
         self.commonSettings = common
         self.queries = queries
         self.structure = self.bayesConfig["structure" + str(n)]
-        self.listVars = []
+        
+        self.listVars = self.parseStructure()
+        self.given = self.listVars[0]
 
         try:
             self.dp = int(self.commonSettings['decimalplaces'])
@@ -57,14 +59,14 @@ class NaiveBayes:
             self.learn()
             self.saveLearnt()
             self.saveLearntText()
-            self.displayLearnt()
-            #self.displayDiscretes()
-            
+            self.displayLearnt()          
         elif self.test:
             self.makeStructure(self.fileNameTest)
             self.loadLearnt()
             self.readQuestions()
             self.answerQuestions()
+
+
 
     ##################
     # parseStructure #
@@ -74,7 +76,7 @@ class NaiveBayes:
         s = s.replace('|', ',')
         s = s.replace('P(', '')
         s = s.replace(')', '')
-        self.listVars = s.split(',')
+        return s.split(',')
 
     #################
     # makeStructure #
@@ -85,7 +87,6 @@ class NaiveBayes:
         variables that are not in the structure.
         '''
         self.df = pd.read_csv(fileName)
-        self.parseStructure()
         self.df = self.df[self.listVars]
 
     ########
