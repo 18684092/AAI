@@ -5,12 +5,14 @@
 # Date          :   18th October 2022                #
 ######################################################
 
-
+# Main imports
 import json
 import math
 import sys
 import pandas as pd
 from sklearn.metrics import confusion_matrix
+
+# My imports
 from Combinations import Combinations
 
 ###############
@@ -39,6 +41,7 @@ class NaiveBayes:
 
         # Preparation
         self.listVars = self.parseStructure(self.structure)
+        
         self.given = self.listVars[0]
 
         # Total for 'given' dependent column
@@ -62,14 +65,14 @@ class NaiveBayes:
             self.saveLearntText()
             self.displayLearnt()          
         elif self.test:
-            evidence = []
-            for a in self.listVars:
-                if a != self.given:
-                    evidence.append(a)
-            combo = Combinations(evidence, len(evidence)-8)
-            c = combo.getCombinations()
-            print(len(c))
-            quit()
+            #evidence = []
+            #for a in self.listVars:
+            #    if a != self.given:
+            #        evidence.append(a)
+            #combo = Combinations(evidence, len(evidence)-8)
+            #c = combo.getCombinations()
+            #print(c)
+            #quit()
             self.makeStructure(self.fileNameTest)
             self.loadLearnt()
             self.readQuestions()
@@ -99,6 +102,7 @@ class NaiveBayes:
         variables that are not in the structure.
         '''
         self.df = pd.read_csv(fileName)
+
         self.df = self.df[self.listVars]
 
     ########
@@ -290,6 +294,11 @@ class NaiveBayes:
 
         # Each question needs answering - they are P queries
         # found in each row of test file
+        self.show()
+        self.show(self.fileNameTest)
+        self.show("Test Results")
+        self.show("------------")
+        self.show()
         for question in self.questions:
             answers = self.getAnswers(question)
             self.displayAnswers(answers, char)
@@ -314,9 +323,13 @@ class NaiveBayes:
         self.show()
 
         # Confusion matrix
-        tn, fp, fn, tp = confusion_matrix(y, yHat).ravel()
-        print(tn, fp, fn, tp)
-
+        try:
+            tn, fp, fn, tp = confusion_matrix(y, yHat).ravel()
+            print(tn, fp, fn, tp)
+        except:
+            # We are here is there is not enough tests as in the 
+            # play_tennis example
+            pass
     ##############
     # loadLearnt #
     ##############
@@ -358,6 +371,9 @@ class NaiveBayes:
         '''
         All learning probabilities can be displayed or logged.
         '''
+        self.show(self.fileName)
+        self.show("Learnt Probabilities")
+        self.show("--------------------")
         for item in self.learnt.items():
             self.show(item[0] + "=" + item[1][0] + "=" + str(round(item[1][1], self.dp)))
 
@@ -524,12 +540,12 @@ def main(argv):
             print()
             print("All tests have been run. Please see results folder.", e)
             quit()
-        #else:
-        #    print(common)
-        #    print()
-        #    print(bayesConfig)
-        #    print()
-        #    print(queries)
+        else:
+            print(common)
+            print()
+            print(bayesConfig)
+            print()
+            print(queries)
 
 ##################
 # start properly #
