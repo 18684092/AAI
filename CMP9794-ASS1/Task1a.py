@@ -11,7 +11,7 @@ import math
 import sys
 import pandas as pd
 from sklearn.metrics import confusion_matrix
-
+from Combinations import Combinations
 
 ###############
 # Naive Bayes #
@@ -38,7 +38,7 @@ class NaiveBayes:
             self.dp = 3
 
         # Preparation
-        self.listVars = self.parseStructure()
+        self.listVars = self.parseStructure(self.structure)
         self.given = self.listVars[0]
 
         # Total for 'given' dependent column
@@ -62,6 +62,14 @@ class NaiveBayes:
             self.saveLearntText()
             self.displayLearnt()          
         elif self.test:
+            evidence = []
+            for a in self.listVars:
+                if a != self.given:
+                    evidence.append(a)
+            combo = Combinations(evidence, len(evidence)-8)
+            c = combo.getCombinations()
+            print(len(c))
+            quit()
             self.makeStructure(self.fileNameTest)
             self.loadLearnt()
             self.readQuestions()
@@ -70,13 +78,13 @@ class NaiveBayes:
     ##################
     # parseStructure #
     ##################
-    def parseStructure(self):
+    def parseStructure(self, structure):
         '''
         The structure is given in the config file.
         A structure is P(target|evidence) where
         evidence is a list of variables.
         '''
-        s = self.structure
+        s = structure
         s = s.replace('|', ',')
         s = s.replace('P(', '')
         s = s.replace(')', '')
@@ -244,7 +252,7 @@ class NaiveBayes:
     ####################
     def argMaxPrediction(self, results):
         '''
-        After normalising which is the max value as that is
+        After normalising, which is the max value as that is
         the prediction
         '''
         prediction = None
@@ -252,7 +260,7 @@ class NaiveBayes:
         for key in results.keys():
             if results[key][2] > value:
                 value = results[key][2]
-                # Pull argmax value from within human readable form
+                # Pull argmax value from within human readable answer
                 prediction = key.split('|')[0].replace('P(' + self.given + '=','').replace("'",'')
         return prediction
 
@@ -272,7 +280,7 @@ class NaiveBayes:
         y = []
         yHat = []
 
-        # Get position of the given variable
+        # Get position of the target variable
         qPosition = self.getQPos()
 
         # Log and standard have different math operations
@@ -281,6 +289,7 @@ class NaiveBayes:
             char = " + "
 
         # Each question needs answering - they are P queries
+        # found in each row of test file
         for question in self.questions:
             answers = self.getAnswers(question)
             self.displayAnswers(answers, char)
@@ -288,7 +297,7 @@ class NaiveBayes:
             results = self.constructResult(results)
             results = self.normaliseResults(results)
             prediction = self.argMaxPrediction(results)
-            # Make metric - will be accuracy        
+            # Make metrics        
             count += 1
             y.append(question[qPosition])
             yHat.append(prediction)
@@ -417,7 +426,7 @@ class NaiveBayes:
             result = self.df[[variable]]
             result = result.reset_index()
             # Count each feature and add a discrete probability
-            for index, value in result.iterrows():
+            for _, value in result.iterrows():
                 if value[1] not in self.discretes[variable]:
                     self.discretes[variable][value[1]] = {'total': 1, 'prob': float(1/self.total)}
                     self.learnt["P(" + str(variable) + "='" + str(value[1]) + "')"] = ("1/"+str(self.total), float(1/self.total))
