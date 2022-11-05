@@ -70,6 +70,11 @@ class NaiveBayes:
     # parseStructure #
     ##################
     def parseStructure(self):
+        '''
+        The structure is given in the config file.
+        A structure is P(target|evidence) where
+        evidence is a list of variables.
+        '''
         s = self.structure
         s = s.replace('|', ',')
         s = s.replace('P(', '')
@@ -91,6 +96,10 @@ class NaiveBayes:
     # show #
     ########
     def show(self, line = '', endLine = '\n'):
+        '''
+        Either prints to screen, writes to a log file
+        or both.
+        '''
         if self.commonSettings['display'] == 'True':
             print(str(line), end=endLine)
         if self.commonSettings['logging'] == 'True':
@@ -102,6 +111,12 @@ class NaiveBayes:
     # readQuestions #
     #################
     def readQuestions(self):
+        '''
+        Questions / queries are actually the test file
+        rows where predictions are made. Each question
+        is asking given the evidence can we predict and
+        outcome.
+        '''
         self.variables = list(self.df.columns)
         for index, row in self.df.iterrows():
             self.questions.append(list(map(str,row.tolist())))
@@ -110,6 +125,11 @@ class NaiveBayes:
     # getQPos #
     ###########  
     def getQPos(self):
+        '''
+        Q / Question position is where in the list of
+        variables is the target / the variable that we
+        are trying to predict. The position could change.
+        '''
         qPosition = 0
         for i, v in enumerate(self.variables):
             if v == self.given:
@@ -119,6 +139,13 @@ class NaiveBayes:
     # getAnswers #
     ##############
     def getAnswers(self, question):
+        '''
+        Answers are in the form:
+        P(target='0'|evidence) = P(target='0') + P(age='3'|target='0') + P(oldpeak='0'|target='0')
+        P(target='1'|evidence) = P(target='1') + P(age='3'|target='1') + P(oldpeak='0'|target='1')
+        they are in human readable format.
+        This function prepares the answers.
+        '''
         answers = {}
         for discrete in self.learnt.keys():
             if "P(" + self.given + "=" in discrete:
@@ -131,7 +158,11 @@ class NaiveBayes:
     ###################
     # displayEvidence #
     ###################
-    def displayEvidence(self, answers, char):
+    def displayAnswers(self, answers, char):
+        '''
+        Displays
+        P(target='0'|evidence) = P(target='0') + P(age='3'|target='0') + P(oldpeak='0'|target='0')
+        '''
         # Build evidence strings for human output
         for key in answers.keys():
             self.show(key[0:-1] + "|evidence) = ", '')
@@ -146,6 +177,11 @@ class NaiveBayes:
     # enumerateAnswers #
     ####################
     def enumerateAnswers(self, answers, char):
+        '''
+        Enumerates the prepared human readable answers into calculations.
+        P(target='0'|evidence) = -0.709 + -1.314 + -2.19 + -0.968 = xyz
+        P(target='1'|evidence) = -0.677 + -1.937 + -1.301 + -2.099 = xyz
+        '''
         results = {}
         for key in answers.keys():
             self.show(key[0:-1] + "|evidence) = ", '')
@@ -171,6 +207,11 @@ class NaiveBayes:
     # constructResult #
     ###################
     def constructResult(self, results):
+        '''
+        The normalisation requires the previous two results to use
+        each others value within the denominator.
+        This is a helper function.
+        '''
         for key in results.keys():
             for otherKey in results.keys():
                 if otherKey != key:
@@ -181,6 +222,10 @@ class NaiveBayes:
     # normaliseResults #
     ####################
     def normaliseResults(self, results):
+        '''
+        Does what it says on the tin. Normalises the two answers and
+        calls each value a result.
+        '''
         # Output normalised result
         self.show()
         for key in results.keys():
@@ -197,6 +242,10 @@ class NaiveBayes:
     # argMaxPrediction #
     ####################
     def argMaxPrediction(self, results):
+        '''
+        After normalising which is the max value as that is
+        the prediction
+        '''
         prediction = None
         value = 0
         for key in results.keys():
@@ -210,7 +259,12 @@ class NaiveBayes:
     # answerQuestion #
     ##################
     def answerQuestions(self):
-
+        '''
+        Main function that takes each line of a test file
+        (which I call questions / queries) and produces an
+        answer for each row. Discrete values have been
+        previously learnt.
+        '''
         # For basic metrics
         count = 0
         correct = 0
@@ -248,6 +302,8 @@ class NaiveBayes:
         self.show("Number of predictions: " + str(count))
         self.show("Accuracy = " + str(round(correct / count, self.dp)))
         self.show()
+
+        # Confusion matrix
         tn, fp, fn, tp = confusion_matrix(y, yHat).ravel()
         print(tn, fp, fn, tp)
 
@@ -255,6 +311,10 @@ class NaiveBayes:
     # loadLearnt #
     ##############
     def loadLearnt(self):
+        '''
+        The model previously learnt discrete probabilities
+        so they can be loaded back in as a dictionary.
+        '''
         with open(self.outFile, 'r') as f:
             self.learnt = json.load(f)
 
@@ -262,6 +322,10 @@ class NaiveBayes:
     # saveLearnt #
     ##############
     def saveLearnt(self):
+        '''
+        The classifier has learnt discrete probabilities.
+        These are saved for future use as a dictionary.
+        '''
         with open(self.outFile, 'w') as f:
             json.dump(self.learnt, f)
 
@@ -269,6 +333,10 @@ class NaiveBayes:
     # saveLearntText #
     ################## 
     def saveLearntText(self):
+        '''
+        All the discrete / conditional probabilities learnt are saved
+        in human readable format - just because we can.
+        '''
         with open(self.outFile + ".txt", 'w') as fp:
             for item in self.learnt.items():
                 fp.write(item[0] + " = " + item[1][0] + " = " + str(round(item[1][1], self.dp)) +"\n")
@@ -277,6 +345,9 @@ class NaiveBayes:
     # displayLearnt #
     #################
     def displayLearnt(self):
+        '''
+        All learning probabilities can be displayed or logged.
+        '''
         for item in self.learnt.items():
             self.show(item[0] + "=" + item[1][0] + "=" + str(round(item[1][1], self.dp)))
 
@@ -284,6 +355,10 @@ class NaiveBayes:
     # learn # 
     #########
     def learn(self):
+        '''
+        Learns conditional probabilities. P(variable=atrribute|evidence=attribute).
+        No, Simple Laplacian or smoothed Laplacian is applied to avoid zeros.
+        '''
         for variable in self.discretes:
             for attribute in self.discretes[variable]:
                 if variable != self.given:
@@ -315,6 +390,9 @@ class NaiveBayes:
     # displayDiscretes #
     ####################
     def displayDiscretes(self):
+        '''
+        What it says on the tin - used for debugging and testing.
+        '''
         self.show("Discrete variables and probabilities for: " + str(self.fileName))
         self.show("Total samples:" + str(self.total))
         self.show()
@@ -330,6 +408,10 @@ class NaiveBayes:
     # getDiscreteValues #
     #####################
     def getDiscreteValues(self):
+        '''
+        Simple variable probabilities P(variable=attribute) are found.
+        These must all sum to 1 across the variables attributes.
+        '''
         for variable in self.discretes:
             result = self.df[[variable]]
             result = result.reset_index()
@@ -347,6 +429,9 @@ class NaiveBayes:
     # populate discrete dictionary #
     ################################
     def getDiscreteVariables(self):
+        '''
+        Builds a dictionary of variables with discrete values.
+        '''
         for variable in self.df.columns:
             if variable not in self.discretes:
                 self.discretes[variable] = {}
