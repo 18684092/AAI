@@ -65,6 +65,7 @@ class NaiveBayes:
             self.saveLearntText()
             self.displayLearnt()          
         elif self.test:
+            # NOTE run test for each combination of variables
             #evidence = []
             #for a in self.listVars:
             #    if a != self.given:
@@ -279,6 +280,7 @@ class NaiveBayes:
         previously learnt.
         '''
         # For basic metrics
+        # NOTE extend so using ones mentioned in ASS Brief
         count = 0
         correct = 0
         y = []
@@ -538,7 +540,7 @@ def main(argv):
         # Only need except due to for loop
         except KeyError as e:
             print()
-            print("All tests have been run. Please see results folder.", e)
+            print("All tests have been run. Please see results folder.")
             quit()
         else:
             print(common)
