@@ -1,5 +1,6 @@
 # Taken from https://www.geeksforgeeks.org/print-all-possible-combinations-of-r-elements-in-a-given-array-of-size-n/
 # with some modification by Andy Perrett
+# It has been objectified and made to return all combos
 
 # Program to print all combination
 # of size r in an array of size n
@@ -8,16 +9,30 @@
 # combinations of size r in arr[] of
 # size n. This function mainly uses
 # combinationUtil()
+
+#########
+# class #
+#########
 class Combinations:
 
+    ############
+    # __init__ #
+    ############
     def __init__(self, structure, s):
+        # c will be returned with a list of combinations
         self.c = []
         n = len(structure)
         self.getCombination(structure, n, s)
         
+    ###################
+    # getCombinations #
+    ###################
     def getCombinations(self):
         return self.c
 
+    ##################
+    # getCombination #
+    ##################
     def getCombination(self, arr, n, r):
     
         # A temporary array to store
@@ -26,8 +41,13 @@ class Combinations:
         
         # Print all combination using
         # temporary array 'data[]'
-        self. combinationUtil(arr, n, r, 0, data, 0)
+        self.combinationUtil(arr, n, r, 0, data, 0)
         return 
+    
+    ###################
+    # combinationUtil #
+    ###################
+    def combinationUtil(self,arr, n, r, index, data, i):
         ''' arr[] ---> Input Array
         n     ---> Size of input array
         r     ---> Size of a combination to be printed
@@ -35,10 +55,9 @@ class Combinations:
         data[] ---> Temporary array to store
                     current combination
         i     ---> index of current element in arr[]     '''
-    def combinationUtil(self,arr, n, r, index, data, i):
-    
         # Current combination is ready,
         # print it
+        # Andy modified it to append this result to the others
         if (index == r):
             result = []
             for j in range(r):
@@ -55,14 +74,12 @@ class Combinations:
         # current is included, put
         # next at next location
         data[index] = arr[i]
-        self.combinationUtil(arr, n, r, index + 1,
-                        data, i + 1)
+        self.combinationUtil(arr, n, r, index + 1, data, i + 1)
     
         # current is excluded, replace it
         # with next (Note that i+1 is passed,
         # but index is not changed)
-        self.combinationUtil(arr, n, r, index,
-                        data, i + 1)
+        self.combinationUtil(arr, n, r, index, data, i + 1)
     
 
 # This code is contributed
