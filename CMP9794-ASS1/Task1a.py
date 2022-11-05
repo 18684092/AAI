@@ -1,15 +1,14 @@
 ######################################################
 # Module        :   Advanced Artificial Inteligence  #
-# Workshop      :   1 - Naive Bayes                  #
+# Workshop      :   Assignment 1                     #
 # Author        :   Andy Perrett (PER18684092)       #
-# Date          :   9th October 2022                 #
+# Date          :   18th October 2022                #
 ######################################################
+
 
 import json
 import math
-
 import sys
-
 import pandas as pd
 from sklearn.metrics import confusion_matrix
 
@@ -20,30 +19,32 @@ from sklearn.metrics import confusion_matrix
 class NaiveBayes:
     def __init__(self, bayesConfig, n, test, common, queries=None ):
 
+        # Config and general control
+        self.number = n
+        self.test = test
+
         # Configuration
         self.bayesConfig = bayesConfig
-        self.number = n
         self.fileName = self.bayesConfig["learnfile" + str(n)]
-        self.fileNameTest = self.bayesConfig["testfile" + str(n)]
-        
-        self.test = test
+        self.fileNameTest = self.bayesConfig["testfile" + str(n)]    
         self.outFile = self.bayesConfig["out" + str(n)]
         self.commonSettings = common
         self.queries = queries
         self.structure = self.bayesConfig["structure" + str(n)]
         
-        self.listVars = self.parseStructure()
-        self.given = self.listVars[0]
-
         try:
             self.dp = int(self.commonSettings['decimalplaces'])
         except:
             self.dp = 3
 
+        # Preparation
+        self.listVars = self.parseStructure()
+        self.given = self.listVars[0]
+
         # Total for 'given' dependent column
         self.total = 0
         
-        # Dictionary to hold discrete and learnt probabilities
+        # Dictionary to hold discrete learnt probabilities
         self.discretes = {}
         self.learnt = {}
         self.df = None
@@ -282,7 +283,7 @@ class NaiveBayes:
         # Each question needs answering - they are P queries
         for question in self.questions:
             answers = self.getAnswers(question)
-            self.displayEvidence(answers, char)
+            self.displayAnswers(answers, char)
             results = self.enumerateAnswers(answers, char)
             results = self.constructResult(results)
             results = self.normaliseResults(results)
