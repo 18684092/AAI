@@ -1,5 +1,5 @@
-# Taken from https://www.geeksforgeeks.org/print-all-possible-combinations-of-r-elements-in-a-given-array-of-size-n/
-# with some modification by Andy Perrett
+# NOTE Taken from https://www.geeksforgeeks.org/print-all-possible-combinations-of-r-elements-in-a-given-array-of-size-n/
+# with some modification by myself, Andy Perrett
 # It has been objectified and made to return all combos
 
 # Program to print all combination
@@ -57,7 +57,7 @@ class Combinations:
         i     ---> index of current element in arr[]     '''
         # Current combination is ready,
         # print it
-        # Andy modified it to append this result to the others
+        # Andy modified this part to append this result to the previous
         if (index == r):
             result = []
             for j in range(r):
