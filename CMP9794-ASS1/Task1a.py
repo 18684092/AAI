@@ -9,7 +9,6 @@
 import json
 import math
 import sys
-import pandas as pd
 from sklearn.metrics import confusion_matrix
 
 # My imports
@@ -49,10 +48,12 @@ class NaiveBayes:
 
         # Total for 'given' dependent column
         self.total = 0
+
         self.bestStructure = []
         self.bestAcc = 0
         self.numberStructures = 0
         self.overrideDisplay = False
+        
         # Dictionary to hold discrete learnt probabilities
         self.discretes = {}
         self.learnt = {}
@@ -60,6 +61,7 @@ class NaiveBayes:
         self.variables = []
         self.questions = []
 
+        # These are added due to replacing Pandas dataframes with my own code for holding data
         self.rawDataDict = {}
         self.randVariables = []
         
@@ -95,6 +97,10 @@ class NaiveBayes:
     # readFile #
     ############
     def readFile(self, fileName):
+        '''
+        This was originally done using Pandas but replaced with my this version
+        when it was thought that the pandas library use was not allowed.
+        '''
         rawData = []       
         with open(fileName, 'r') as f:
             count = 0
@@ -116,6 +122,12 @@ class NaiveBayes:
     # createStructures #
     ####################
     def createStructures(self):
+        '''
+        Create all structures keeping variables in order. Use all variables
+        then remove one and test network. Put that variable back and remove another,
+        repeat by removing 2 and then 3, 4 5 variables etc. May produce thousands
+        of different structures.
+        '''
         combos = []
         if self.findBestStrure:
             for n in range(1,len(self.listVars)-1):
@@ -147,17 +159,6 @@ class NaiveBayes:
         s = s.replace('P(', '')
         s = s.replace(')', '')
         return s.split(',')
-
-    #################
-    # makeStructure #
-    #################
-    def makeStructure(self, fileName):
-        '''
-        Reads in train or test file and removes 
-        variables that are not in the structure.
-        '''
-        self.df = pd.read_csv(fileName)
-        self.df = self.df[self.listVars]
 
     ########
     # show #
@@ -509,6 +510,9 @@ class NaiveBayes:
     # countMatchingAttribs #
     ########################    
     def countMatchingAttribs(self, variable, match):
+        '''
+        How many occurances of attribute within the variable?
+        '''
         count = 0
         for attrib in self.rawDataDict[variable]:
             if attrib == match:
@@ -519,6 +523,9 @@ class NaiveBayes:
     # countMatchingAttribsMulti #
     #############################
     def countMatchingAttribsMulti(self, variable1, variable2, match1, match2):
+        '''
+        How many occurances where atrib1 and attrib2 match the given values?
+        '''
         count = 0
         for (attrib1, attrib2) in zip(self.rawDataDict[variable1], self.rawDataDict[variable2]):
             if attrib1 == match1 and attrib2 == match2:
@@ -529,6 +536,10 @@ class NaiveBayes:
     # getVariableContents #
     #######################
     def getVariableContents(self,listOfVars):
+        '''
+        Return a list of variables. This is a hack that was needed
+        when pandas dataframes were replaced by my own code.
+        '''
         dict = {}
         for variable in listOfVars:
             dict[variable] = self.rawDataDict[variable]
@@ -540,7 +551,9 @@ class NaiveBayes:
     def displayDiscretes(self):
         '''
         What it says on the tin - used for debugging and testing.
+        Actually displays / logs Priors.
         '''
+        # NOTE change the word discrete with Prior
         self.show("Discrete variables and probabilities for: " + str(self.fileName))
         self.show("Total samples:" + str(self.total))
         self.show()
