@@ -201,11 +201,11 @@ class NaiveBayes:
                             self.variables.append(variable)
                 else:
                     data = line.strip().split(',')
+                    qs = []
                     for index in indexes:
-                        self.questions.append(data[index])
+                        qs.append(data[index])
+                    self.questions.append(qs)
                 count += 1
-            print(self.questions)
-            print(self.variables)
 
 
     ###########  
@@ -239,17 +239,17 @@ class NaiveBayes:
         This function prepares the answers.
         '''
         answers = {}
-        print("q",question, self.questions)
         for discrete in self.learnt.keys():
             if "P(" + self.given + "=" in discrete:
                 answers[discrete] = [[discrete, self.learnt[discrete]]]
-                print("ad", answers[discrete])
                 try:
                     for index, option in enumerate(question):
                         if self.variables[index] != self.given:
                             answers[discrete].append(["P("+ self.variables[index] + "='" + option + "'|" + discrete[2:-1]+")", self.learnt["P("+ self.variables[index] + "='" + option + "'|" + discrete[2:-1]+")"]])
                 except:
+                    # This is a hack - but it works
                     del answers[discrete]
+        
         return answers
 
     ###################
@@ -383,6 +383,7 @@ class NaiveBayes:
         self.show("Test Results")
         self.show("------------")
         self.show()
+        
         for question in self.questions:
             answers = self.getAnswers(question)
             self.displayAnswers(answers, char)
@@ -393,7 +394,6 @@ class NaiveBayes:
             
             # Make metrics        
             count += 1
-            print(question, qPosition)
             y.append(question[qPosition])
             yHat.append(prediction)
             if prediction ==  question[qPosition]:
@@ -525,7 +525,9 @@ class NaiveBayes:
                 count += 1
         return count
 
-
+    #######################
+    # getVariableContents #
+    #######################
     def getVariableContents(self,listOfVars):
         dict = {}
         for variable in listOfVars:
@@ -543,7 +545,7 @@ class NaiveBayes:
         self.show("Total samples:" + str(self.total))
         self.show()
         for variable in self.discretes:
-            self.show("Var:" + str(variable))
+            self.show("Variable:" + str(variable))
             for option in self.discretes[variable]:
                 self.show("\tAttribute: " + str(option))
                 self.show("\tTotal: " + str(self.discretes[variable][option]['total']))
@@ -568,7 +570,7 @@ class NaiveBayes:
                     domainSizeX = len(self.discretes[variable])
                     if self.MLE == 'True':
                         self.learnt["P(" + str(variable) + "='" + str(attribute) + "')"] = ("2/"+str(self.total + domainSizeX)), float(2/(self.total + domainSizeX))
-                    elif self.lapSimple == 'True':
+                    else:
                         self.learnt["P(" + str(variable) + "='" + str(attribute) + "')"] = ("1/"+str(self.total)), float(1/self.total)
                 else:
                     self.discretes[variable][attribute]['total'] += 1
@@ -577,6 +579,9 @@ class NaiveBayes:
                     self.discretes[variable][attribute]['prob'] = (countX + 1) / (self.total + domainSizeX)
                     if self.MLE == 'True':
                         self.learnt["P("+str(variable)+"='"+str(attribute)+"')"] = (str(countX + 1) + "/"+ str(self.total + domainSizeX)),float((countX + 1) / (self.total + domainSizeX))
+                    else:
+                        self.learnt["P("+str(variable)+"='"+str(attribute)+"')"] = (str(countX) + "/"+ str(self.total)),float((countX) / self.total)
+
 
     ################################
     # populate discrete dictionary #
