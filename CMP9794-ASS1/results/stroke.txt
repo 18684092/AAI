@@ -1,3 +1,5 @@
+Conditional Probability Tables
+------------------------------
 P(gender='Male') = 1719/4151 = 0.414
 P(gender='Female') = 2431/4151 = 0.586
 P(gender='Other') = 1/4151 = 0.0

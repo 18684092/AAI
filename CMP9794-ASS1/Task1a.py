@@ -462,6 +462,8 @@ class NaiveBayes:
         in human readable format - just because we can.
         '''
         with open(self.outFile + ".txt", 'w') as fp:
+            fp.write("Conditional Probability Tables\n")
+            fp.write("------------------------------\n")
             for item in self.learnt.items():
                 fp.write(item[0] + " = " + item[1][0] + " = " + str(round(item[1][1], self.dp)) +"\n")
 
@@ -473,8 +475,8 @@ class NaiveBayes:
         All learning probabilities can be displayed or logged.
         '''
         self.show(self.fileName)
-        self.show("Learnt Probabilities")
-        self.show("--------------------")
+        self.show("Conditional Probability Tables")
+        self.show("------------------------------")
         for item in self.learnt.items():
             self.show(item[0] + "=" + item[1][0] + "=" + str(round(item[1][1], self.dp)))
 

@@ -1,3 +1,5 @@
+Conditional Probability Tables
+------------------------------
 P(O='sunny') = 5/14 = 0.357
 P(O='overcast') = 4/14 = 0.286
 P(O='rain') = 5/14 = 0.357

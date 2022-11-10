@@ -1,3 +1,5 @@
+Conditional Probability Tables
+------------------------------
 P(Smoking='0') = 363/1500 = 0.242
 P(Smoking='1') = 1137/1500 = 0.758
 P(Yellow_Fingers='0') = 310/1500 = 0.207
