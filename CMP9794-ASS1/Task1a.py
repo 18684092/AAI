@@ -92,6 +92,7 @@ class NaiveBayes:
                 self.loadLearnt()
                 self.readTestQueries()
                 self.answerQueries(i)
+            #print(self.bestResults[self.bestResults['BestStructureI']])
 
     ############
     # readFile #
@@ -417,11 +418,13 @@ class NaiveBayes:
         if self.bestResults[i]['Correct'] / self.bestResults[i]['TotalQueries'] > self.bestResults['BestAcc']:
             self.bestResults['BestAcc'] = self.bestResults[i]['Correct'] / self.bestResults[i]['TotalQueries'] 
             self.bestResults['BestStructure'] = self.listVars
+            self.bestResults['BestStructureI'] = i
             print("Best Structure: " +str(self.bestResults['BestStructure']) + " Acc: " + str(round(self.bestResults['BestAcc'] * 100.0, self.dp)) + "% Combos tried: " + str(self.numberStructures))
 
         # Confusion matrix
         try:
             tn, fp, fn, tp = confusion_matrix(self.bestResults[i]['Y_true'], self.bestResults[i]['Y_pred']).ravel()
+            self.bestResults[i]['Confusion'] = {'TN': tn, "FP": fp, "FN": fn, "TP": tp}
             self.show("tn, fp, fn, tp: " + str(tn) + " " + str(fp) + " " + str(fn) + " " + str(tp))
         except:
             # We are here is there is not enough tests as in the 
