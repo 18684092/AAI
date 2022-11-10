@@ -34,7 +34,7 @@ class NaiveBayes:
         self.structure = self.bayesConfig["structure" + str(n)]
         self.findBestStrure = self.bayesConfig["findbeststructure" + str(n)]
         self.MLE = self.commonSettings['maximumlikelihood']
-        self.lapSimple = self.commonSettings['laplaciansimple']
+        self.avoidZeros = self.commonSettings['avoidzeros']
         
         try:
             self.dp = int(self.commonSettings['decimalplaces'])
@@ -50,7 +50,9 @@ class NaiveBayes:
         self.total = 0
 
         self.bestStructure = []
-        self.bestAcc = 0
+        self.bestResults = {}
+        self.bestResults['BestAcc'] = 0
+        self.bestResults['BestStructure'] = []
         self.numberStructures = 0
         self.overrideDisplay = False
         
@@ -81,17 +83,15 @@ class NaiveBayes:
             combos.insert(0,self.listVars)
             self.numberStructures = len(combos)
             for i, v in enumerate(combos):
-                # Don't want to log/display while testing
+                # Don't want to log/display while testing combinations
                 if i > 0:
                     self.overrideDisplay = True
                 else: 
                     self.overrideDisplay = False
                 self.listVars = v
-                #self.makeStructure(self.fileNameTest)
-                #self.readFile(self.fileNameTest)
                 self.loadLearnt()
-                self.readQuestions()
-                self.answerQuestions()
+                self.readTestQueries()
+                self.answerQueries(i)
 
     ############
     # readFile #
@@ -180,7 +180,7 @@ class NaiveBayes:
     #################
     # readQuestions #
     #################
-    def readQuestions(self):
+    def readTestQueries(self):
         '''
         Questions / queries are actually the test file
         rows where predictions are made. Each question
@@ -228,9 +228,9 @@ class NaiveBayes:
         return d[0]
 
 
-    ##############
-    # getAnswers #
-    ##############
+    #################
+    # getJointProbs #
+    #################
     def getAnswers(self, question):
         '''
         Answers are in the form:
@@ -351,12 +351,12 @@ class NaiveBayes:
                 value = results[key][2]
                 # Pull argmax value from within human readable answer
                 prediction = key.split('|')[0].replace('P(' + self.given + '=','').replace("'",'')
-        return prediction
+        return prediction, results[key][2]
 
-    ##################
-    # answerQuestion #
-    ##################
-    def answerQuestions(self):
+    #################
+    # answerQueries #
+    #################
+    def answerQueries(self,i):
         '''
         Main function that takes each line of a test file
         (which I call questions / queries) and produces an
@@ -365,10 +365,13 @@ class NaiveBayes:
         '''
         # For basic metrics
         # NOTE extend so using ones mentioned in ASS Brief
-        count = 0
-        correct = 0
-        y = []
-        yHat = []
+        self.bestResults[i] = {}
+        self.bestResults[i]['Structure'] = self.listVars
+        self.bestResults[i]['TotalQueries'] = 0
+        self.bestResults[i]['Correct'] = 0
+        self.bestResults[i]['Y_true'] = []
+        self.bestResults[i]['Y_pred'] = []
+        self.bestResults[i]['Y_prob'] = []
 
         # Get position of the target variable
         qPosition = self.getQPos()
@@ -391,39 +394,34 @@ class NaiveBayes:
             results = self.enumerateAnswers(answers, char)
             results = self.constructResult(results)
             results = self.normaliseResults(results)
-            prediction = self.argMaxPrediction(results)
+            prediction, probability = self.argMaxPrediction(results)
             
             # Make metrics        
-            count += 1
-            y.append(question[qPosition])
-            yHat.append(prediction)
+            self.bestResults[i]['TotalQueries'] += 1
+            self.bestResults[i]['Y_true'].append(question[qPosition])
+            self.bestResults[i]['Y_pred'].append(prediction)
+            self.bestResults[i]['Y_prob'].append(probability)
             if prediction ==  question[qPosition]:
-                correct += 1
+                self.bestResults[i]['Correct'] += 1
                 self.show("Correct")
             else:
                 self.show("Wrong")            
             self.show()
 
         self.show(self.listVars)
-        self.show("Correct predictions  : " + str(correct))
-        self.show("Number of predictions: " + str(count))
-        self.show("Accuracy = " + str(round(correct / count, self.dp)))
+        self.show("Correct predictions  : " + str(self.bestResults[i]['Correct']))
+        self.show("Number of predictions: " + str(self.bestResults[i]['TotalQueries']))
+        self.show("Accuracy = " + str(round(self.bestResults[i]['Correct'] / self.bestResults[i]['TotalQueries'], self.dp)))
         self.show()
 
-        # print("Structure", self.listVars)
-        # print("Correct predictions  : " + str(correct))
-        # print("Number of predictions: " + str(count))
-        # print("Accuracy = " + str(round(correct / count, self.dp)))
-        # print()
-
-        if correct / count > self.bestAcc:
-            self.bestAcc = correct / count
-            self.bestStructure = self.listVars
-            print("Best Structure: " +str(self.bestStructure) + " Acc: " + str(round(self.bestAcc * 100.0, self.dp)) + "% Combos tried: " + str(self.numberStructures))
+        if self.bestResults[i]['Correct'] / self.bestResults[i]['TotalQueries'] > self.bestResults['BestAcc']:
+            self.bestResults['BestAcc'] = self.bestResults[i]['Correct'] / self.bestResults[i]['TotalQueries'] 
+            self.bestResults['BestStructure'] = self.listVars
+            print("Best Structure: " +str(self.bestResults['BestStructure']) + " Acc: " + str(round(self.bestResults['BestAcc'] * 100.0, self.dp)) + "% Combos tried: " + str(self.numberStructures))
 
         # Confusion matrix
         try:
-            tn, fp, fn, tp = confusion_matrix(y, yHat).ravel()
+            tn, fp, fn, tp = confusion_matrix(self.bestResults[i]['Y_true'], self.bestResults[i]['Y_pred']).ravel()
             self.show("tn, fp, fn, tp: " + str(tn) + " " + str(fp) + " " + str(fn) + " " + str(tp))
         except:
             # We are here is there is not enough tests as in the 
@@ -496,9 +494,9 @@ class NaiveBayes:
                         if countXY == 0:
                             if self.MLE == 'True':
                                 self.learnt["P(" + str(variable) + "='" + str(attribute) + "'|" + str(self.given) + "='" + str(givenOption) + "')" ] = (str(countXY + 1) + "/" + str(countY + domainSizeX), float((countXY + 1) / (countY + domainSizeX)))
-                            elif self.lapSimple == 'True':
+                            elif self.avoidZeros == 'True':
                                 self.learnt["P(" + str(variable) + "='" + str(attribute) + "'|" + str(self.given) + "='" + str(givenOption) + "')" ] = (str(countXY) + "/" + str(countY), float((countXY + float(self.commonSettings['simple'])) / countY))
-                            elif self.lapSimple == 'False':
+                            elif self.avoidZeros == 'False':
                                     self.learnt["P(" + str(variable) + "='" + str(attribute) + "'|" + str(self.given) + "='" + str(givenOption) + "')" ] = (str(countXY) + "/" + str(countY), float(countXY / countY))
                         else:
                             if self.MLE == 'True':
@@ -682,9 +680,8 @@ def main(argv):
         
         # Only need except due to for loop
         except KeyError as e:
-            print(e)
-            #print("All tests have been run. Please see results folder.")
-            #quit()
+            print("All tests have been run. Please see results folder.")
+            quit()
         else:
             #print(common)
             print()
