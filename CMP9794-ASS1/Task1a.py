@@ -458,7 +458,7 @@ class NaiveBayes:
 
         # Is this the best structure
         if self.bestResults[i]['balanced'] > self.bestResults['BestAcc']:
-            self.bestResults['BestAcc'] = balanced_accuracy_score(self.bestResults[i]['Y_true'], self.bestResults[i]['Y_pred'])  
+            self.bestResults['BestAcc'] = self.bestResults[i]['balanced']  
             self.bestResults['BestStructure'] = self.listVars
             self.bestResults['BestStructureI'] = i
             print("Best Structure: " +str(self.bestResults['BestStructure']) + " Bal Acc: " + str(round(self.bestResults['BestAcc'] * 100.0, self.dp)) + "% Combos tried: " + str(self.numberStructures))
