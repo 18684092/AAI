@@ -51,7 +51,7 @@ Correct
 ['PT', 'O', 'T', 'H', 'W']
 Correct predictions  : 1
 Number of predictions: 1
-Accuracy = 1.0
+Balanced Accuracy    : 1.0
 
 data/lung_cancer-train.csv
 Conditional Probability Tables
@@ -5129,12 +5129,12 @@ P(Lung_cancer='0'|evidence) = 0.074
 P(Lung_cancer='1'|evidence) = 0.926
 Correct
 
+tn, fp, fn, tp: 97 46 50 307
 ['Lung_cancer', 'Smoking', 'Yellow_Fingers', 'Anxiety', 'Peer_Pressure', 'Genetics', 'Attention_Disorder', 'Born_an_Even_Day', 'Car_Accident', 'Fatigue', 'Allergy', 'Coughing']
 Correct predictions  : 404
 Number of predictions: 500
-Accuracy = 0.808
+Balanced Accuracy    : 0.769
 
-tn, fp, fn, tp: 97 46 50 307
 data/heart-data-discretized-train.csv
 Conditional Probability Tables
 ------------------------------
@@ -7415,12 +7415,12 @@ P(target='0'|evidence) = 0.991
 P(target='1'|evidence) = 0.009
 Correct
 
+tn, fp, fn, tp: 82 17 19 94
 ['target', 'age', 'sex', 'cp', 'trestbps', 'chol', 'fbs', 'restecg', 'thalach', 'exang', 'oldpeak', 'slope', 'ca', 'thal']
 Correct predictions  : 176
 Number of predictions: 212
-Accuracy = 0.83
+Balanced Accuracy    : 0.83
 
-tn, fp, fn, tp: 82 17 19 94
 data/stroke-data-discretized-train.csv
 Conditional Probability Tables
 ------------------------------
@@ -17126,9 +17126,9 @@ P(stroke='1'|evidence) = 0.103
 P(stroke='0'|evidence) = 0.897
 Correct
 
+tn, fp, fn, tp: 882 37 30 10
 ['stroke', 'gender', 'age', 'hypertension', 'heart_disease', 'ever_married', 'work_type', 'Residence_type', 'avg_glucose_level', 'bmi', 'smoking_status']
 Correct predictions  : 892
 Number of predictions: 959
-Accuracy = 0.93
+Balanced Accuracy    : 0.605
 
-tn, fp, fn, tp: 882 37 30 10

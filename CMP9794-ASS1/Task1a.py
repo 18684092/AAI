@@ -9,10 +9,15 @@
 import json
 import math
 import sys
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, balanced_accuracy_score, roc_curve, auc, brier_score_loss
+import numpy as np
 
 # My imports
 from Combinations import Combinations
+
+# While testing structures some of the metrics warn (NaN)
+import warnings
+warnings.filterwarnings('ignore') 
 
 ###############
 # Naive Bayes #
@@ -35,6 +40,8 @@ class NaiveBayes:
         self.findBestStrure = self.bayesConfig["findbeststructure" + str(n)]
         self.MLE = self.commonSettings['maximumlikelihood']
         self.avoidZeros = self.commonSettings['avoidzeros']
+        self.positivePred = self.bayesConfig["positiveprediction" + str(n)]
+        self.KLConstant = float(self.commonSettings['klconstant'])
         
         try:
             self.dp = int(self.commonSettings['decimalplaces'])
@@ -402,6 +409,8 @@ class NaiveBayes:
             self.bestResults[i]['Y_true'].append(question[qPosition])
             self.bestResults[i]['Y_pred'].append(prediction)
             self.bestResults[i]['Y_prob'].append(probability)
+
+            # Within the lof file show predictions
             if prediction ==  question[qPosition]:
                 self.bestResults[i]['Correct'] += 1
                 self.show("Correct")
@@ -409,18 +418,12 @@ class NaiveBayes:
                 self.show("Wrong")            
             self.show()
 
-        self.show(self.listVars)
-        self.show("Correct predictions  : " + str(self.bestResults[i]['Correct']))
-        self.show("Number of predictions: " + str(self.bestResults[i]['TotalQueries']))
-        self.show("Accuracy = " + str(round(self.bestResults[i]['Correct'] / self.bestResults[i]['TotalQueries'], self.dp)))
-        self.show()
-
-        if self.bestResults[i]['Correct'] / self.bestResults[i]['TotalQueries'] > self.bestResults['BestAcc']:
-            self.bestResults['BestAcc'] = self.bestResults[i]['Correct'] / self.bestResults[i]['TotalQueries'] 
-            self.bestResults['BestStructure'] = self.listVars
-            self.bestResults['BestStructureI'] = i
-            print("Best Structure: " +str(self.bestResults['BestStructure']) + " Acc: " + str(round(self.bestResults['BestAcc'] * 100.0, self.dp)) + "% Combos tried: " + str(self.numberStructures))
-
+        self.bestResults[i]['balanced'] = balanced_accuracy_score(self.bestResults[i]['Y_true'], self.bestResults[i]['Y_pred']) 
+        fpr, tpr, _ = roc_curve(self.bestResults[i]['Y_true'], self.bestResults[i]['Y_prob'], pos_label=self.positivePred)
+        self.bestResults[i]['auc'] = auc(fpr, tpr)
+        self.bestResults[i]['kl'] = self.KLDivergence(self.bestResults[i])
+        self.bestResults[i]['brier'] = self.brier(self.bestResults[i])
+        
         # Confusion matrix
         try:
             tn, fp, fn, tp = confusion_matrix(self.bestResults[i]['Y_true'], self.bestResults[i]['Y_pred']).ravel()
@@ -430,6 +433,55 @@ class NaiveBayes:
             # We are here is there is not enough tests as in the 
             # play_tennis example
             pass
+
+        self.show(self.listVars)
+        self.show("Correct predictions  : " + str(self.bestResults[i]['Correct']))
+        self.show("Number of predictions: " + str(self.bestResults[i]['TotalQueries']))
+        self.show("Balanced Accuracy    : " + str(round(self.bestResults[i]['balanced'] , self.dp)))
+        self.show()
+
+        # Is this the best structure
+        if self.bestResults[i]['balanced'] > self.bestResults['BestAcc']:
+            self.bestResults['BestAcc'] = balanced_accuracy_score(self.bestResults[i]['Y_true'], self.bestResults[i]['Y_pred'])  
+            self.bestResults['BestStructure'] = self.listVars
+            self.bestResults['BestStructureI'] = i
+            print("Best Structure: " +str(self.bestResults['BestStructure']) + " Acc: " + str(round(self.bestResults['BestAcc'] * 100.0, self.dp)) + "% Combos tried: " + str(self.numberStructures))
+
+    ################
+    # KLDivergence #
+    ################
+    def KLDivergence(self,results):
+        '''
+        Calculated KL divergence
+        '''
+        Y_true = self.convertBinary(results['Y_true'])
+        # KLConstant avoids NaN    
+        P = np.asarray(Y_true) + self.KLConstant
+        Q = np.asarray(results['Y_prob']) + self.KLConstant
+        return np.sum(P * np.log(P/Q))
+
+
+    #########
+    # brier #
+    #########
+    def brier(self, results):
+        Y_true = self.convertBinary(results['Y_true'])
+        return brier_score_loss(Y_true, results['Y_prob'])
+     
+    #################
+    # convertBinary #
+    #################
+    def convertBinary(self, array):
+        Y_true = []
+
+        # Converts yes / no in to 1 / 0
+        for yt in array:
+            if yt == self.positivePred:
+                Y_true.append(1)
+            else:
+                Y_true.append(0)
+
+        return Y_true
 
     ##############
     # loadLearnt #
