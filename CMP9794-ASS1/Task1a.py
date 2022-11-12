@@ -362,6 +362,17 @@ class NaiveBayes:
                 prediction = key.split('|')[0].replace('P(' + self.given + '=','').replace("'",'')
         return prediction, value
 
+    #####################
+    # probOfTargetTruth #
+    #####################
+    def probOfTargetTruth(self, results, target):
+        '''
+        After normalising, what probability does the target have
+        '''
+        for index,key in enumerate(results.keys()):
+            if key == "P(" + self.given + "='" + str(target) + "'|evidence)":
+                return results[key][2]     
+
     #################
     # answerQueries #
     #################
@@ -381,7 +392,9 @@ class NaiveBayes:
         self.bestResults[i]['Y_true'] = []
         self.bestResults[i]['Y_pred'] = []
         self.bestResults[i]['Y_prob'] = []
+        self.bestResults[i]['Y_prob_pred'] = []
 
+        
         # Get position of the target variable
         qPosition = self.getQPos()
         # Log and standard have different math operations
@@ -404,12 +417,13 @@ class NaiveBayes:
             results = self.constructResult(results)
             results = self.normaliseResults(results)
             prediction, probability = self.argMaxPrediction(results)
-            
+
             # Make metrics        
             self.bestResults[i]['TotalQueries'] += 1
             self.bestResults[i]['Y_true'].append(question[qPosition])
             self.bestResults[i]['Y_pred'].append(prediction)
-            self.bestResults[i]['Y_prob'].append(probability)
+            self.bestResults[i]['Y_prob'].append(self.probOfTargetTruth(results, question[qPosition]))
+            self.bestResults[i]['Y_prob_pred'].append(probability)
 
             # Within the lof file show predictions
             if prediction ==  question[qPosition]:
@@ -420,17 +434,11 @@ class NaiveBayes:
             self.show()
 
         self.bestResults[i]['balanced'] = balanced_accuracy_score(self.bestResults[i]['Y_true'], self.bestResults[i]['Y_pred']) 
-        
-        
-        #Y_true = self.convertBinary(self.bestResults[i]['Y_true'])
-
-
         fpr, tpr, _ = roc_curve(self.bestResults[i]['Y_true'], self.bestResults[i]['Y_prob'], pos_label=self.positivePred)
-
         self.bestResults[i]['auc'] = auc(fpr, tpr)
-
         self.bestResults[i]['kl'] = self.KLDivergence(self.bestResults[i])
         self.bestResults[i]['brier'] = self.brier(self.bestResults[i])
+        self.bestResults[i]['accuracy'] = self.bestResults[i]['Correct'] / len(self.bestResults[i]['Y_true'])
         
         # Confusion matrix
         try:
@@ -453,15 +461,9 @@ class NaiveBayes:
             self.bestResults['BestAcc'] = balanced_accuracy_score(self.bestResults[i]['Y_true'], self.bestResults[i]['Y_pred'])  
             self.bestResults['BestStructure'] = self.listVars
             self.bestResults['BestStructureI'] = i
-            print("Best Structure: " +str(self.bestResults['BestStructure']) + " Acc: " + str(round(self.bestResults['BestAcc'] * 100.0, self.dp)) + "% Combos tried: " + str(self.numberStructures))
-            print("AUC:", self.bestResults[i]['auc'], "KL: ", self.bestResults[i]['kl'], "Bier:", self.bestResults[i]['brier'])
+            print("Best Structure: " +str(self.bestResults['BestStructure']) + " Bal Acc: " + str(round(self.bestResults['BestAcc'] * 100.0, self.dp)) + "% Combos tried: " + str(self.numberStructures))
+            print("AUC:", self.bestResults[i]['auc'], "KL:", self.bestResults[i]['kl'], "Brier:", self.bestResults[i]['brier'], "Acc:", self.bestResults[i]['accuracy'])
 
-            count = 0
-            for y, yh in zip(self.bestResults[i]['Y_true'], self.bestResults[i]['Y_pred']):
-                if y == yh: count +=1
-            print("Acc: ", count/len(self.bestResults[i]['Y_true']))
-            #if "heart" in self.fileNameTest:
-            #    quit() 
 
     ################
     # KLDivergence #
