@@ -78,6 +78,9 @@ class NaiveBayes:
         
         # Do functions for learn or test mode
         if not self.test:
+            trainStart = time.time()
+            print("Training on " + self.fileName)
+            print("------------" + '-' * len(self.fileName))
             self.readFile(self.fileName)
             #self.makeStructure(self.fileName)
             self.countRows()
@@ -86,8 +89,15 @@ class NaiveBayes:
             self.learn()
             self.saveLearnt()
             self.saveLearntText()
-            self.displayLearnt()          
+            self.displayLearnt() 
+            trainEnd = time.time()  
+            print()
+            print("Training time: " + str(trainEnd - trainStart) + " seconds")
+            print()       
         elif self.test:
+            testStart = time.time()
+            print("Testing on " + self.fileNameTest)
+            print('-' * len("Testing on " + self.fileNameTest))
             combos = self.createStructures()
             combos.insert(0,self.listVars)
             self.numberStructures = len(combos)
@@ -107,6 +117,10 @@ class NaiveBayes:
                 
                 self.readTestQueries()
                 self.answerQueries(i)
+            endTest = time.time()
+            print()
+            print("Testing time: " + str(endTest - testStart) + " seconds to find the best structure from " + str(len(combos)) + " structures")
+            print() 
             #print(self.bestResults[self.bestResults['BestStructureI']])
 
     ############
@@ -479,9 +493,17 @@ class NaiveBayes:
             self.bestResults['BestAcc'] = self.bestResults[i]['balanced']  
             self.bestResults['BestStructure'] = self.listVars
             self.bestResults['BestStructureI'] = i
-            print("Best Structure: " +str(self.bestResults['BestStructure']) + " Bal Acc: " + str(round(self.bestResults[i]['balanced'] * 100.0, self.dp)) + "% Combos tried: " + str(self.numberStructures))
-            print("AUC:", self.bestResults[i]['auc'], "KL:", self.bestResults[i]['kl'], "Brier:", self.bestResults[i]['brier'], "Acc:", self.bestResults[i]['accuracy'], "LL:", self.bestResults[i]['LL'], "BIC:", self.bestResults[i]['BIC'], "F1:", self.bestResults[i]['F1'], "Confusion:", str(self.bestResults[i]['Confusion']))
-            print("Inference time:", self.bestResults[i]['InferenceT'], "Seconds")
+            print("Best Structure  : " + str(self.bestResults['BestStructure']))
+            print("Balanced Acc    : " + str(round(self.bestResults[i]['balanced'] * 100.0, self.dp)) + "%")
+            print("Area under curve: " + str(round(self.bestResults[i]['auc'], self.dp)))
+            print("KL divergence   : " + str(round(self.bestResults[i]['kl'], self.dp)))
+            print("Brier score     : " + str(round(self.bestResults[i]['brier'], self.dp)))
+            print("Std Accuracy    : " + str(round(self.bestResults[i]['accuracy'], self.dp)))
+            print("Log Likelihood  : " + str(round(self.bestResults[i]['LL'], self.dp)))
+            print("BIC score       : " + str(round(self.bestResults[i]['BIC'], self.dp)))
+            print("F1-score        : " + str(round(self.bestResults[i]['F1'], self.dp)))
+            print("Confusion matrix: " + str(self.bestResults[i]['Confusion']))
+            print("Inference time  : " + str(round(self.bestResults[i]['InferenceT'], self.dp)) + " seconds")
             print()
 
     #################
