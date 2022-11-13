@@ -92,7 +92,7 @@ class NaiveBayes:
             self.displayLearnt() 
             trainEnd = time.time()  
             print()
-            print("Training time: " + str(trainEnd - trainStart) + " seconds")
+            print("Training time: " + str(round(trainEnd - trainStart, self.dp)) + " seconds")
             print()       
         elif self.test:
             testStart = time.time()
@@ -119,7 +119,7 @@ class NaiveBayes:
                 self.answerQueries(i)
             endTest = time.time()
             print()
-            print("Testing time: " + str(endTest - testStart) + " seconds to find the best structure from " + str(len(combos)) + " structures")
+            print("Testing time: " + str(round(endTest - testStart, self.dp)) + " seconds to find the best structure from " + str(len(combos)) + " structures")
             print() 
             #print(self.bestResults[self.bestResults['BestStructureI']])
 
@@ -493,24 +493,26 @@ class NaiveBayes:
             self.bestResults['BestAcc'] = self.bestResults[i]['balanced']  
             self.bestResults['BestStructure'] = self.listVars
             self.bestResults['BestStructureI'] = i
-            print("Best Structure  : P(" + self.given + "|", end="")
+            print("Structure #" + str(i) + " " * (17 - len("Structure #" + str(i) + " ")) + " : P(" + self.given + "|", end="")
             for index,variable in enumerate(self.bestResults[i]['Structure']):
                 #print(index,variable)
                 if variable != self.given:
                     print(variable, end="")
-                if index < len(self.bestResults[i]['Structure']) - 2 and index > 0:
+                if index < len(self.bestResults[i]['Structure']) - 1 and index > 0:
                     print(",", end="")
             print(")")
-            print("Balanced Acc    : " + str(round(self.bestResults[i]['balanced'] * 100.0, self.dp)) + "%")
-            print("Std Accuracy    : " + str(round(self.bestResults[i]['accuracy'] * 100, self.dp)) + "%")
-            print("Area under curve: " + str(round(self.bestResults[i]['auc'], self.dp)))
-            print("KL divergence   : " + str(round(self.bestResults[i]['kl'], self.dp)))
-            print("Brier score     : " + str(round(self.bestResults[i]['brier'], self.dp)))
-            print("Log Likelihood  : " + str(round(self.bestResults[i]['LL'], self.dp)))
-            print("BIC score       : " + str(round(self.bestResults[i]['BIC'], self.dp)))
-            print("F1-score        : " + str(round(self.bestResults[i]['F1'], self.dp)))
-            print("Confusion matrix: " + str(self.bestResults[i]['Confusion']))
-            print("Inference time  : " + str(round(self.bestResults[i]['InferenceT'], self.dp)) + " seconds")
+            print("Log Likelihood   : " + str(round(self.bestResults[i]['LL'], self.dp)))
+            print("BIC score        : " + str(round(self.bestResults[i]['BIC'], self.dp)))
+            print("Test results")
+            print("------------")
+            print("Balanced Acc     : " + str(round(self.bestResults[i]['balanced'] * 100.0, self.dp)) + "%")
+            print("Std Accuracy     : " + str(round(self.bestResults[i]['accuracy'] * 100, self.dp)) + "%")
+            print("Area under curve : " + str(round(self.bestResults[i]['auc'], self.dp)))
+            print("KL divergence    : " + str(round(self.bestResults[i]['kl'], self.dp)))
+            print("Brier score      : " + str(round(self.bestResults[i]['brier'], self.dp)))
+            print("F1-score         : " + str(round(self.bestResults[i]['F1'], self.dp)))
+            print("Confusion matrix : " + str(self.bestResults[i]['Confusion']))
+            print("Inference time   : " + str(round(self.bestResults[i]['InferenceT'], self.dp)) + " seconds")
             print()
 
     #################
