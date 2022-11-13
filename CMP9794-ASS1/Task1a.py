@@ -9,11 +9,12 @@
 import json
 import math
 import sys
-from sklearn.metrics import confusion_matrix
+import time
+from sklearn.metrics import confusion_matrix, balanced_accuracy_score, roc_curve, auc, brier_score_loss, f1_score
+import numpy as np
 
 # My imports
 from Combinations import Combinations
-
 
 ###############
 # Naive Bayes #
@@ -36,6 +37,9 @@ class NaiveBayes:
         self.findBestStrure = self.bayesConfig["findbeststructure" + str(n)]
         self.MLE = self.commonSettings['maximumlikelihood']
         self.avoidZeros = self.commonSettings['avoidzeros']
+        self.positivePred = self.bayesConfig["positiveprediction" + str(n)]
+        self.KLConstant = float(self.commonSettings['klconstant'])
+
         
         try:
             self.dp = int(self.commonSettings['decimalplaces'])
@@ -70,6 +74,9 @@ class NaiveBayes:
         
         # Do functions for learn or test mode
         if not self.test:
+            trainStart = time.time()
+            print("Training on " + self.fileName)
+            print("------------" + '-' * len(self.fileName))
             self.readFile(self.fileName)
             #self.makeStructure(self.fileName)
             self.countRows()
@@ -78,11 +85,24 @@ class NaiveBayes:
             self.learn()
             self.saveLearnt()
             self.saveLearntText()
-            self.displayLearnt()          
+            self.displayLearnt() 
+            trainEnd = time.time()  
+            print()
+            print("Training time: " + str(trainEnd - trainStart) + " seconds")
+            print()       
         elif self.test:
+            testStart = time.time()
+            print("Testing on " + self.fileNameTest)
+            print('-' * len("Testing on " + self.fileNameTest))
             combos = self.createStructures()
             combos.insert(0,self.listVars)
             self.numberStructures = len(combos)
+            self.readFile(self.fileName)
+            self.loadLearnt()
+            self.countRows()
+            self.getDiscreteVariables()
+            self.getDiscretePriors()
+
             for i, v in enumerate(combos):
                 # Don't want to log/display while testing combinations
                 if i > 0:
@@ -90,9 +110,13 @@ class NaiveBayes:
                 else: 
                     self.overrideDisplay = False
                 self.listVars = v
-                self.loadLearnt()
+                
                 self.readTestQueries()
                 self.answerQueries(i)
+            endTest = time.time()
+            print()
+            print("Testing time: " + str(endTest - testStart) + " seconds to find the best structure from " + str(len(combos)) + " structures")
+            print() 
             #print(self.bestResults[self.bestResults['BestStructureI']])
 
     ############
@@ -353,7 +377,18 @@ class NaiveBayes:
                 value = results[key][2]
                 # Pull argmax value from within human readable answer
                 prediction = key.split('|')[0].replace('P(' + self.given + '=','').replace("'",'')
-        return prediction, results[key][2]
+        return prediction, value
+
+    #####################
+    # probOfTargetTruth #
+    #####################
+    def probOfTargetTruth(self, results, target):
+        '''
+        After normalising, what probability does the target have
+        '''
+        for index,key in enumerate(results.keys()):
+            if key == "P(" + self.given + "='" + str(target) + "'|evidence)":
+                return results[key][2]     
 
     #################
     # answerQueries #
@@ -366,7 +401,7 @@ class NaiveBayes:
         previously learnt.
         '''
         # For basic metrics
-        # NOTE extend so using ones mentioned in ASS Brief
+        
         self.bestResults[i] = {}
         self.bestResults[i]['Structure'] = self.listVars
         self.bestResults[i]['TotalQueries'] = 0
@@ -374,7 +409,9 @@ class NaiveBayes:
         self.bestResults[i]['Y_true'] = []
         self.bestResults[i]['Y_pred'] = []
         self.bestResults[i]['Y_prob'] = []
+        self.bestResults[i]['Y_prob_pred'] = []
 
+        
         # Get position of the target variable
         qPosition = self.getQPos()
         # Log and standard have different math operations
@@ -389,7 +426,10 @@ class NaiveBayes:
         self.show("Test Results")
         self.show("------------")
         self.show()
-        
+
+        # Start timer() to record inference time
+        start = time.time()
+
         for question in self.questions:
             answers = self.getAnswers(question)
             self.displayAnswers(answers, char)
@@ -397,12 +437,15 @@ class NaiveBayes:
             results = self.constructResult(results)
             results = self.normaliseResults(results)
             prediction, probability = self.argMaxPrediction(results)
-            
+
             # Make metrics        
             self.bestResults[i]['TotalQueries'] += 1
             self.bestResults[i]['Y_true'].append(question[qPosition])
             self.bestResults[i]['Y_pred'].append(prediction)
-            self.bestResults[i]['Y_prob'].append(probability)
+            self.bestResults[i]['Y_prob'].append(self.probOfTargetTruth(results, question[qPosition]))
+            self.bestResults[i]['Y_prob_pred'].append(probability)
+
+            # Within the lof file show predictions
             if prediction ==  question[qPosition]:
                 self.bestResults[i]['Correct'] += 1
                 self.show("Correct")
@@ -410,18 +453,20 @@ class NaiveBayes:
                 self.show("Wrong")            
             self.show()
 
-        self.show(self.listVars)
-        self.show("Correct predictions  : " + str(self.bestResults[i]['Correct']))
-        self.show("Number of predictions: " + str(self.bestResults[i]['TotalQueries']))
-        self.show("Accuracy = " + str(round(self.bestResults[i]['Correct'] / self.bestResults[i]['TotalQueries'], self.dp)))
-        self.show()
+        # Record time taken
+        end = time.time()
+        self.bestResults[i]['InferenceT'] = end - start
 
-        if self.bestResults[i]['Correct'] / self.bestResults[i]['TotalQueries'] > self.bestResults['BestAcc']:
-            self.bestResults['BestAcc'] = self.bestResults[i]['Correct'] / self.bestResults[i]['TotalQueries'] 
-            self.bestResults['BestStructure'] = self.listVars
-            self.bestResults['BestStructureI'] = i
-            print("Best Structure: " +str(self.bestResults['BestStructure']) + " Acc: " + str(round(self.bestResults['BestAcc'] * 100.0, self.dp)) + "% Combos tried: " + str(self.numberStructures))
-
+        self.bestResults[i]['balanced'] = balanced_accuracy_score(self.bestResults[i]['Y_true'], self.bestResults[i]['Y_pred']) 
+        fpr, tpr, _ = roc_curve(self.bestResults[i]['Y_true'], self.bestResults[i]['Y_prob'], pos_label=self.positivePred)
+        self.bestResults[i]['auc'] = auc(fpr, tpr)
+        self.bestResults[i]['kl'] = self.KLDivergence(self.bestResults[i])
+        self.bestResults[i]['brier'] = self.brier(self.bestResults[i])
+        self.bestResults[i]['accuracy'] = self.bestResults[i]['Correct'] / len(self.bestResults[i]['Y_true'])
+        self.bestResults[i]['LL'] = self.logLikelihood()
+        self.bestResults[i]['BIC'] = self.baysianInfoCriterion(self.bestResults[i]['LL'])
+        self.bestResults[i]['F1'] = f1_score(self.bestResults[i]['Y_true'], self.bestResults[i]['Y_pred'], pos_label=self.positivePred)
+                
         # Confusion matrix
         try:
             tn, fp, fn, tp = confusion_matrix(self.bestResults[i]['Y_true'], self.bestResults[i]['Y_pred']).ravel()
@@ -430,7 +475,142 @@ class NaiveBayes:
         except:
             # We are here is there is not enough tests as in the 
             # play_tennis example
+            self.bestResults[i]['Confusion'] = {}
             pass
+
+        self.show(self.listVars)
+        self.show("Correct predictions  : " + str(self.bestResults[i]['Correct']))
+        self.show("Number of predictions: " + str(self.bestResults[i]['TotalQueries']))
+        self.show("Balanced Accuracy    : " + str(round(self.bestResults[i]['balanced'] , self.dp)))
+        self.show()
+
+        # Is this the best structure
+        if self.bestResults[i]['balanced'] > self.bestResults['BestAcc']:
+            self.bestResults['BestAcc'] = self.bestResults[i]['balanced']  
+            self.bestResults['BestStructure'] = self.listVars
+            self.bestResults['BestStructureI'] = i
+            print("Best Structure  : P(" + self.given + "|", end="")
+            for index,variable in enumerate(self.bestResults[i]['Structure']):
+                #print(index,variable)
+                if variable != self.given:
+                    print(variable, end="")
+                if index < len(self.bestResults[i]['Structure']) - 2 and index > 0:
+                    print(",", end="")
+            print(")")
+            print("Balanced Acc    : " + str(round(self.bestResults[i]['balanced'] * 100.0, self.dp)) + "%")
+            print("Std Accuracy    : " + str(round(self.bestResults[i]['accuracy'] * 100, self.dp)) + "%")
+            print("Area under curve: " + str(round(self.bestResults[i]['auc'], self.dp)))
+            print("KL divergence   : " + str(round(self.bestResults[i]['kl'], self.dp)))
+            print("Brier score     : " + str(round(self.bestResults[i]['brier'], self.dp)))
+            print("Log Likelihood  : " + str(round(self.bestResults[i]['LL'], self.dp)))
+            print("BIC score       : " + str(round(self.bestResults[i]['BIC'], self.dp)))
+            print("F1-score        : " + str(round(self.bestResults[i]['F1'], self.dp)))
+            print("Confusion matrix: " + str(self.bestResults[i]['Confusion']))
+            print("Inference time  : " + str(round(self.bestResults[i]['InferenceT'], self.dp)) + " seconds")
+            print()
+
+    #################
+    # logLikelihood #
+    #################
+    def logLikelihood(self):
+        # Self.rawDataDict contains all training data
+        # self.learnt contains all probabilities
+        # self.listVars conatins the variables in THIS structure
+        LL = 0
+        for variable in self.listVars:
+            for trainVariable in self.rawDataDict.keys():
+                # if the variable is in this structure
+                if variable in self.rawDataDict.keys() and variable == trainVariable:
+                    for index,attribute in enumerate(self.rawDataDict[trainVariable]):
+                        if variable != self.given:
+                            # get the log(P(var=attrib|target=rawY)) from learnt
+                            search = "P(" + variable + "='" + attribute + "'|" + self.given +"='"+str(self.rawDataDict[self.given][index]) + "')"
+                            value = self.learnt[search][1]
+                            LL += math.log(value)
+                        elif variable == self.given:
+                            # get log(P(given=rawY)) from learnt
+                            search = "P(" + self.given +"='"+str(self.rawDataDict[self.given][index]) + "')"
+                            value = self.learnt[search][1]
+                            LL += math.log(value)
+        return LL
+        
+    ########################
+    # baysianInfoCriterion #
+    ########################    
+    # Taken from workshop material but modified to match own method.
+    # Overall function simplified
+    def baysianInfoCriterion(self, LL):
+        penalty = 0
+        for variable in self.listVars:
+            # number of params = number of P(variable=attrib|given) or P(variable=attrib) if it is a predictor var  
+            penalty += (math.log(self.total) * self.numberOfParams(variable)) / 2
+        BIC = LL - penalty
+        return BIC
+
+    ##################
+    # numberOfParams #
+    ##################
+    def numberOfParams(self, variable):
+        '''
+        number of params = number of P(variable=attrib|given) or P(variable=attrib) if it is a predictor var 
+        '''
+        count = 0
+
+        # It has to be one or the other - we know variable and number
+        # of attributes is in the learnt dict. If we can't match on first
+        # count it must be a predictor so count again without the pipe |
+
+        # Presume a non target variable
+        for CP in self.learnt:
+            if "P(" + variable + "='" in CP and "|" in CP:
+                count += 1
+        
+        # Must be the target
+        if count == 0:
+            for CP in self.learnt:
+                if "P(" + variable + "='" in CP and "|" not in CP:
+                    count += 1            
+        
+        return count
+
+    ################
+    # KLDivergence #
+    ################
+    def KLDivergence(self,results):
+        '''
+        Calculate KL divergence
+        '''
+        Y_true = self.convertBinary(results['Y_true'])
+        # KLConstant avoids NaN    
+        P = np.asarray(Y_true) + self.KLConstant
+        Q = np.asarray(results['Y_prob']) + self.KLConstant
+        return np.sum(P * np.log(P/Q))
+
+    #########
+    # brier #
+    #########
+    def brier(self, results):
+        Y_true = self.convertBinary(results['Y_true'])
+        return brier_score_loss(Y_true, results['Y_prob'])
+     
+    #################
+    # convertBinary #
+    #################
+    def convertBinary(self, array):
+        '''
+        Takes the positive attribute and converts to binary 1.
+        All other values are 0
+        '''
+        Y_true = []
+
+        # Converts yes / no in to 1 / 0
+        for yt in array:
+            if yt == self.positivePred:
+                Y_true.append(1)
+            else:
+                Y_true.append(0)
+
+        return Y_true
 
     ##############
     # loadLearnt #
