@@ -14,6 +14,7 @@ from sklearn.metrics import confusion_matrix
 # My imports
 from Combinations import Combinations
 
+
 ###############
 # Naive Bayes #
 ###############
