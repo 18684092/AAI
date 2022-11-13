@@ -9,6 +9,7 @@
 import json
 import math
 import sys
+import time
 from sklearn.metrics import confusion_matrix, balanced_accuracy_score, roc_curve, auc, brier_score_loss, f1_score
 import numpy as np
 
@@ -95,6 +96,7 @@ class NaiveBayes:
             self.countRows()
             self.getDiscreteVariables()
             self.getDiscretePriors()
+
             for i, v in enumerate(combos):
                 # Don't want to log/display while testing combinations
                 if i > 0:
@@ -389,7 +391,7 @@ class NaiveBayes:
         previously learnt.
         '''
         # For basic metrics
-        # NOTE extend so using ones mentioned in ASS Brief
+        
         self.bestResults[i] = {}
         self.bestResults[i]['Structure'] = self.listVars
         self.bestResults[i]['TotalQueries'] = 0
@@ -414,7 +416,10 @@ class NaiveBayes:
         self.show("Test Results")
         self.show("------------")
         self.show()
-        
+
+        # Start timer() to record inference time
+        start = time.time()
+
         for question in self.questions:
             answers = self.getAnswers(question)
             self.displayAnswers(answers, char)
@@ -438,6 +443,10 @@ class NaiveBayes:
                 self.show("Wrong")            
             self.show()
 
+        # Record time taken
+        end = time.time()
+        self.bestResults[i]['InferenceT'] = end - start
+
         self.bestResults[i]['balanced'] = balanced_accuracy_score(self.bestResults[i]['Y_true'], self.bestResults[i]['Y_pred']) 
         fpr, tpr, _ = roc_curve(self.bestResults[i]['Y_true'], self.bestResults[i]['Y_prob'], pos_label=self.positivePred)
         self.bestResults[i]['auc'] = auc(fpr, tpr)
@@ -456,6 +465,7 @@ class NaiveBayes:
         except:
             # We are here is there is not enough tests as in the 
             # play_tennis example
+            self.bestResults[i]['Confusion'] = {}
             pass
 
         self.show(self.listVars)
@@ -470,8 +480,9 @@ class NaiveBayes:
             self.bestResults['BestStructure'] = self.listVars
             self.bestResults['BestStructureI'] = i
             print("Best Structure: " +str(self.bestResults['BestStructure']) + " Bal Acc: " + str(round(self.bestResults[i]['balanced'] * 100.0, self.dp)) + "% Combos tried: " + str(self.numberStructures))
-            print("AUC:", self.bestResults[i]['auc'], "KL:", self.bestResults[i]['kl'], "Brier:", self.bestResults[i]['brier'], "Acc:", self.bestResults[i]['accuracy'], "LL:", self.bestResults[i]['LL'], "BIC:", self.bestResults[i]['BIC'], "F1:", self.bestResults[i]['F1'])
-            
+            print("AUC:", self.bestResults[i]['auc'], "KL:", self.bestResults[i]['kl'], "Brier:", self.bestResults[i]['brier'], "Acc:", self.bestResults[i]['accuracy'], "LL:", self.bestResults[i]['LL'], "BIC:", self.bestResults[i]['BIC'], "F1:", self.bestResults[i]['F1'], "Confusion:", str(self.bestResults[i]['Confusion']))
+            print("Inference time:", self.bestResults[i]['InferenceT'], "Seconds")
+            print()
 
     #################
     # logLikelihood #
@@ -491,7 +502,7 @@ class NaiveBayes:
                             search = "P(" + variable + "='" + attribute + "'|" + self.given +"='"+str(self.rawDataDict[self.given][index]) + "')"
                             value = self.learnt[search][1]
                             LL += math.log(value)
-                        if variable == self.given:
+                        elif variable == self.given:
                             # get log(P(given=rawY)) from learnt
                             search = "P(" + self.given +"='"+str(self.rawDataDict[self.given][index]) + "')"
                             value = self.learnt[search][1]
@@ -501,16 +512,14 @@ class NaiveBayes:
     ########################
     # baysianInfoCriterion #
     ########################    
+    # Taken from workshop material but modified to match own method.
+    # Overall function simplified
     def baysianInfoCriterion(self, LL):
         penalty = 0
         for variable in self.listVars:
             # number of params = number of P(variable=attrib|given) or P(variable=attrib) if it is a predictor var  
-            num_params = self.numberOfParams(variable)
-            local_penalty = (math.log(self.total)*num_params)/2
-            penalty += local_penalty
-
+            penalty += (math.log(self.total) * self.numberOfParams(variable)) / 2
         BIC = LL - penalty
-
         return BIC
 
     ##################
@@ -551,7 +560,6 @@ class NaiveBayes:
         P = np.asarray(Y_true) + self.KLConstant
         Q = np.asarray(results['Y_prob']) + self.KLConstant
         return np.sum(P * np.log(P/Q))
-
 
     #########
     # brier #
