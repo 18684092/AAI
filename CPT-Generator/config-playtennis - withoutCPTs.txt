@@ -1,0 +1,6 @@
+name:PlayTennis
+
+random_variables:Play(P);Outlook(O);Temperature(T);Wind(W);Humidity(H)
+
+structure:P(P);P(O|P);P(T|O,P);P(W|O,P);P(H|T,P)
+
