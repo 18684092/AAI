@@ -493,12 +493,19 @@ class NaiveBayes:
             self.bestResults['BestAcc'] = self.bestResults[i]['balanced']  
             self.bestResults['BestStructure'] = self.listVars
             self.bestResults['BestStructureI'] = i
-            print("Best Structure  : " + str(self.bestResults['BestStructure']))
+            print("Best Structure  : P(" + self.given + "|", end="")
+            for index,variable in enumerate(self.bestResults[i]['Structure']):
+                #print(index,variable)
+                if variable != self.given:
+                    print(variable, end="")
+                if index < len(self.bestResults[i]['Structure']) - 2 and index > 0:
+                    print(",", end="")
+            print(")")
             print("Balanced Acc    : " + str(round(self.bestResults[i]['balanced'] * 100.0, self.dp)) + "%")
+            print("Std Accuracy    : " + str(round(self.bestResults[i]['accuracy'] * 100, self.dp)) + "%")
             print("Area under curve: " + str(round(self.bestResults[i]['auc'], self.dp)))
             print("KL divergence   : " + str(round(self.bestResults[i]['kl'], self.dp)))
             print("Brier score     : " + str(round(self.bestResults[i]['brier'], self.dp)))
-            print("Std Accuracy    : " + str(round(self.bestResults[i]['accuracy'], self.dp)))
             print("Log Likelihood  : " + str(round(self.bestResults[i]['LL'], self.dp)))
             print("BIC score       : " + str(round(self.bestResults[i]['BIC'], self.dp)))
             print("F1-score        : " + str(round(self.bestResults[i]['F1'], self.dp)))
@@ -863,7 +870,7 @@ def main(argv):
         
         # Only need except due to for loop
         except KeyError as e:
-            print("All tests have been run. Please see results folder.",e)
+            print("All tests have been run. Please see results folder.")
             quit()
         else:
             #print(common)
