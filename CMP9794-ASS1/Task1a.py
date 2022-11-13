@@ -9,7 +9,7 @@
 import json
 import math
 import sys
-from sklearn.metrics import confusion_matrix, balanced_accuracy_score, roc_curve, auc, brier_score_loss
+from sklearn.metrics import confusion_matrix, balanced_accuracy_score, roc_curve, auc, brier_score_loss, f1_score
 import numpy as np
 
 # My imports
@@ -90,6 +90,11 @@ class NaiveBayes:
             combos = self.createStructures()
             combos.insert(0,self.listVars)
             self.numberStructures = len(combos)
+            self.readFile(self.fileName)
+            self.loadLearnt()
+            self.countRows()
+            self.getDiscreteVariables()
+            self.getDiscretePriors()
             for i, v in enumerate(combos):
                 # Don't want to log/display while testing combinations
                 if i > 0:
@@ -97,7 +102,7 @@ class NaiveBayes:
                 else: 
                     self.overrideDisplay = False
                 self.listVars = v
-                self.loadLearnt()
+                
                 self.readTestQueries()
                 self.answerQueries(i)
             #print(self.bestResults[self.bestResults['BestStructureI']])
@@ -439,7 +444,10 @@ class NaiveBayes:
         self.bestResults[i]['kl'] = self.KLDivergence(self.bestResults[i])
         self.bestResults[i]['brier'] = self.brier(self.bestResults[i])
         self.bestResults[i]['accuracy'] = self.bestResults[i]['Correct'] / len(self.bestResults[i]['Y_true'])
-        
+        self.bestResults[i]['LL'] = self.logLikelihood()
+        self.bestResults[i]['BIC'] = self.baysianInfoCriterion(self.bestResults[i]['LL'])
+        self.bestResults[i]['F1'] = f1_score(self.bestResults[i]['Y_true'], self.bestResults[i]['Y_pred'], pos_label=self.positivePred)
+                
         # Confusion matrix
         try:
             tn, fp, fn, tp = confusion_matrix(self.bestResults[i]['Y_true'], self.bestResults[i]['Y_pred']).ravel()
@@ -461,16 +469,82 @@ class NaiveBayes:
             self.bestResults['BestAcc'] = self.bestResults[i]['balanced']  
             self.bestResults['BestStructure'] = self.listVars
             self.bestResults['BestStructureI'] = i
-            print("Best Structure: " +str(self.bestResults['BestStructure']) + " Bal Acc: " + str(round(self.bestResults['BestAcc'] * 100.0, self.dp)) + "% Combos tried: " + str(self.numberStructures))
-            print("AUC:", self.bestResults[i]['auc'], "KL:", self.bestResults[i]['kl'], "Brier:", self.bestResults[i]['brier'], "Acc:", self.bestResults[i]['accuracy'])
+            print("Best Structure: " +str(self.bestResults['BestStructure']) + " Bal Acc: " + str(round(self.bestResults[i]['balanced'] * 100.0, self.dp)) + "% Combos tried: " + str(self.numberStructures))
+            print("AUC:", self.bestResults[i]['auc'], "KL:", self.bestResults[i]['kl'], "Brier:", self.bestResults[i]['brier'], "Acc:", self.bestResults[i]['accuracy'], "LL:", self.bestResults[i]['LL'], "BIC:", self.bestResults[i]['BIC'], "F1:", self.bestResults[i]['F1'])
+            
 
+    #################
+    # logLikelihood #
+    #################
+    def logLikelihood(self):
+        # Self.rawDataDict contains all training data
+        # self.learnt contains all probabilities
+        # self.listVars conatins the variables in THIS structure
+        LL = 0
+        for variable in self.listVars:
+            for trainVariable in self.rawDataDict.keys():
+                # if the variable is in this structure
+                if variable in self.rawDataDict.keys() and variable == trainVariable:
+                    for index,attribute in enumerate(self.rawDataDict[trainVariable]):
+                        if variable != self.given:
+                            # get the log(P(var=attrib|target=rawY)) from learnt
+                            search = "P(" + variable + "='" + attribute + "'|" + self.given +"='"+str(self.rawDataDict[self.given][index]) + "')"
+                            value = self.learnt[search][1]
+                            LL += math.log(value)
+                        if variable == self.given:
+                            # get log(P(given=rawY)) from learnt
+                            search = "P(" + self.given +"='"+str(self.rawDataDict[self.given][index]) + "')"
+                            value = self.learnt[search][1]
+                            LL += math.log(value)
+        return LL
+        
+    ########################
+    # baysianInfoCriterion #
+    ########################    
+    def baysianInfoCriterion(self, LL):
+        penalty = 0
+        for variable in self.listVars:
+            # number of params = number of P(variable=attrib|given) or P(variable=attrib) if it is a predictor var  
+            num_params = self.numberOfParams(variable)
+            local_penalty = (math.log(self.total)*num_params)/2
+            penalty += local_penalty
+
+        BIC = LL - penalty
+
+        return BIC
+
+    ##################
+    # numberOfParams #
+    ##################
+    def numberOfParams(self, variable):
+        '''
+        number of params = number of P(variable=attrib|given) or P(variable=attrib) if it is a predictor var 
+        '''
+        count = 0
+
+        # It has to be one or the other - we know variable and number
+        # of attributes is in the learnt dict. If we can't match on first
+        # count it must be a predictor so count again without the pipe |
+
+        # Presume a non target variable
+        for CP in self.learnt:
+            if "P(" + variable + "='" in CP and "|" in CP:
+                count += 1
+        
+        # Must be the target
+        if count == 0:
+            for CP in self.learnt:
+                if "P(" + variable + "='" in CP and "|" not in CP:
+                    count += 1            
+        
+        return count
 
     ################
     # KLDivergence #
     ################
     def KLDivergence(self,results):
         '''
-        Calculated KL divergence
+        Calculate KL divergence
         '''
         Y_true = self.convertBinary(results['Y_true'])
         # KLConstant avoids NaN    
@@ -759,7 +833,7 @@ def main(argv):
         
         # Only need except due to for loop
         except KeyError as e:
-            print("All tests have been run. Please see results folder.")
+            print("All tests have been run. Please see results folder.",e)
             quit()
         else:
             #print(common)

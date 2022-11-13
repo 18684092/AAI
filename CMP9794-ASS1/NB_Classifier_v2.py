@@ -250,7 +250,6 @@ class NB_Classifier:
             elif target_value == '0': Y_true.append(0)
 
             predicted_output = self.predictions[i][target_value]
-            print(self.predictions[i][target_value])
             Y_prob.append(predicted_output)
 
             best_key = max(self.predictions[i], key=self.predictions[i].get)
@@ -262,16 +261,10 @@ class NB_Classifier:
         P = np.asarray(Y_true)+0.00001 # constant to avoid NAN in KL divergence
         Q = np.asarray(Y_prob)+0.00001 # constant to avoid NAN in KL divergence
 
-        for v in Y_pred:
-            print(v)
         # calculate metrics: accuracy, auc, brief, kl, training/inference times
         acc = metrics.balanced_accuracy_score(Y_true, Y_pred)
-        print(Y_true)
-        print(Y_pred)
-        count = 0
-        for y, yh in zip(Y_true, Y_pred):
-            if y == yh: count +=1
-        print("Acc: ", count/len(Y_true))
+
+
         fpr, tpr, _ = metrics.roc_curve(Y_true, Y_prob, pos_label=1)
         auc = metrics.auc(fpr, tpr)
         brier = metrics.brier_score_loss(Y_true, Y_prob)
@@ -293,15 +286,22 @@ class NB_Classifier:
 
     def calculate_log_lilelihood(self):
         LL = 0
- 
+        count = 0
         # iterate over all instances in the training data
         for instance in self.rv_all_values:
+            # Y_true
             predictor_value = instance[len(instance)-1]
-
+            
+            #print("Predictor value" , predictor_value)
             # iterate over all random variables except the predictor var.
+            #print(self.rand_vars)
+            
             for value_index in range(0, len(instance)-1):
+                # queries
                 variable = self.rand_vars[value_index]
                 value = instance[value_index]
+                #print(count, variable, value)
+                #print(self.probabilities , "\n")
                 prob_dist = self.probabilities[variable]
                 prob = prob_dist[value+"|"+predictor_value]
                 LL += math.log(prob)
@@ -314,17 +314,20 @@ class NB_Classifier:
             if self.verbose is True:
                 print("LL: %s -> %f" % (instance, LL))
 
+            count +=1
         return LL
 
     def calculate_bayesian_information_criterion(self, LL):
         penalty = 0
-
+        print(self.rand_vars)
         for variable in self.rand_vars:
             num_params = len(self.probabilities[variable])
+            print(num_params)
             local_penalty = (math.log(self.num_data_instances)*num_params)/2
             penalty += local_penalty
 
         BIC = LL - penalty
+        print("Data instances", self.num_data_instances)
         return BIC
 
 
