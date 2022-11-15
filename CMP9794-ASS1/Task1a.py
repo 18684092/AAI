@@ -12,6 +12,7 @@ import sys
 import time
 from sklearn.metrics import confusion_matrix, balanced_accuracy_score, roc_curve, auc, brier_score_loss, f1_score
 import numpy as np
+import random
 
 # My imports
 from Combinations import Combinations
@@ -43,7 +44,8 @@ class NaiveBayes:
         self.avoidZeros = self.commonSettings['avoidzeros']
         self.positivePred = self.bayesConfig["positiveprediction" + str(n)]
         self.KLConstant = float(self.commonSettings['klconstant'])
-
+        self.pSampling = self.bayesConfig["priorsampling" + str(n)]
+        self.pSampleCount = int(self.bayesConfig["priorsamples" + str(n)])
         
         try:
             self.dp = int(self.commonSettings['decimalplaces'])
@@ -78,9 +80,11 @@ class NaiveBayes:
         
         # Do functions for learn or test mode
         if not self.test:
+            # Delete results file
+            open(self.outFile + "-results.txt", 'w').close()
             trainStart = time.time()
-            print("Training on " + self.fileName)
-            print("------------" + '-' * len(self.fileName))
+            self.showS("Training on " + self.fileName)
+            self.showS("------------" + '-' * len(self.fileName))
             self.readFile(self.fileName)
             #self.makeStructure(self.fileName)
             self.countRows()
@@ -91,13 +95,16 @@ class NaiveBayes:
             self.saveLearntText()
             self.displayLearnt() 
             trainEnd = time.time()  
-            print()
-            print("Training time: " + str(round(trainEnd - trainStart, self.dp)) + " seconds")
-            print()       
+            self.showS()
+            self.showS("Training time: " + str(round(trainEnd - trainStart, self.dp)) + " seconds")
+            self.showS()    
+            if self.pSampling == "True":
+                self.priorSampling()
+  
         elif self.test:
             testStart = time.time()
-            print("Testing on " + self.fileNameTest)
-            print('-' * len("Testing on " + self.fileNameTest))
+            self.showS("Testing on " + self.fileNameTest)
+            self.showS('-' * len("Testing on " + self.fileNameTest))
             combos = self.createStructures()
             combos.insert(0,self.listVars)
             self.numberStructures = len(combos)
@@ -106,7 +113,6 @@ class NaiveBayes:
             self.countRows()
             self.getDiscreteVariables()
             self.getDiscretePriors()
-
             for i, v in enumerate(combos):
                 # Don't want to log/display while testing combinations
                 if i > 0:
@@ -118,10 +124,99 @@ class NaiveBayes:
                 self.readTestQueries()
                 self.answerQueries(i)
             endTest = time.time()
+            self.showS()
+            self.showS("Testing time: " + str(round(endTest - testStart, self.dp)) + " seconds to find the best structure from " + str(len(combos)) + " structures")
+            self.showS() 
+
+        # Test queries taken from config
+        if self.queries != None and self.queries != []:
+            self.loadLearnt()
+            self.total = 1
+            self.getDiscreteVariables()
+            self.getDiscretePriors()
+            for query in self.queries:
+                print(query)
+                self.questions = []
+                self.variables = []
+                q = query.split('|')[1].replace(')','').split(',')
+                a = []
+                for attrib in q:
+                    a.append(attrib.split("=")[1].replace("'",''))
+                self.questions.append(a)
+                for v in q:
+                    self.variables.append(v.split('=')[0].replace("'",''))
+                self.variables.append(self.given)
+                self.answerQuery(0, query)
+            
+    def priorSampling(self):
+        # Move given/target to the back
+        for index, var in enumerate(self.listVars):
+            if var == self.given:
+                self.listVars += [self.listVars.pop(index)]
+                break
+        samples = []
+        for i in range(0,self.pSampleCount):
+            sample = []
+            for variable in self.listVars:
+                priorDict = {}
+                for pProb in self.learnt.keys():
+                    if "P(" + variable + "=" in pProb and "|" not in pProb:
+                        line = self.learnt[pProb]
+                        priorDict[pProb] = line[1]
+                priorDict = {k: v for k, v in sorted(priorDict.items(), key=lambda item: item[1])}
+                rn = random.uniform(0,1)
+                for index,pProb in enumerate(priorDict.keys()):
+                    if rn < priorDict[pProb] or index == len(priorDict) - 1:
+                        v = pProb.replace("P("+variable+"='",'').replace("')",'')
+                        sample.append(v)
+                        break
+            samples.append(sample)
+
+        with open(self.outFile + "-priors.csv", 'w') as fp:
+            for index, variable in enumerate(self.listVars):
+                fp.write(variable)
+                if index < len(self.listVars) - 1:
+                    fp.write(',')
+            fp.write('\n')
+
+            for sample in samples:
+                for index, attribute in enumerate(sample):
+                    fp.write(attribute)
+                    if index < len(sample) - 1:
+                        fp.write(',')
+                fp.write('\n')
+            
+
+
+
+        
+
+    #################
+    # answerQueries #
+    #################
+    def answerQuery(self,i, query):
+        '''
+        Main function that takes each line of a test file
+        (which I call questions / queries) and produces an
+        answer for each row. Discrete values have been
+        previously learnt.
+        '''
+        print()
+        # Log and standard have different math operations
+        char = " * "    
+        if self.commonSettings['log'] == 'True':
+            char = " + "
+
+        for question in self.questions:
+            answers = self.getAnswers(question)
+            self.displayAnswers(answers, char)
+            results = self.enumerateAnswers(answers, char)
+            results = self.constructResult(results)
+            results = self.normaliseResults(results)
+            prediction, probability = self.argMaxPrediction(results)
             print()
-            print("Testing time: " + str(round(endTest - testStart, self.dp)) + " seconds to find the best structure from " + str(len(combos)) + " structures")
-            print() 
-            #print(self.bestResults[self.bestResults['BestStructureI']])
+            print(self.given + "=" + str(prediction) + " with a prob of " + str(round(probability,self.dp)))
+            print()
 
     ############
     # readFile #
@@ -159,7 +254,7 @@ class NaiveBayes:
         of different structures.
         '''
         combos = []
-        if self.findBestStrure:
+        if self.findBestStrure == 'True':
             for n in range(1,len(self.listVars)-1):
                 evidence = []
                 for a in self.listVars:
@@ -206,6 +301,23 @@ class NaiveBayes:
             with open(self.commonSettings['logfile'], 'a') as f:
                 f.write(str(line))
                 f.write(endLine)
+
+    ########
+    # show #
+    ########
+    def showS(self, line = '', endLine = '\n'):
+        '''
+        Either prints to screen, writes to a results file
+        or both.
+        '''
+
+        if self.commonSettings['display'] == 'True':
+            print(str(line), end=endLine)
+
+        with open(self.outFile + "-results.txt", 'a') as f:
+            f.write(str(line))
+            f.write(endLine)
+
 
     #################
     # readQuestions #
@@ -280,7 +392,6 @@ class NaiveBayes:
                 except:
                     # This is a hack - but it works
                     del answers[discrete]
-        
         return answers
 
     ###################
@@ -488,32 +599,33 @@ class NaiveBayes:
         self.show("Balanced Accuracy    : " + str(round(self.bestResults[i]['balanced'] , self.dp)))
         self.show()
 
-        # Is this the best structure
+        # Is this the best structure?
+        # Hill Climbing network structures
         if self.bestResults[i]['balanced'] > self.bestResults['BestAcc']:
             self.bestResults['BestAcc'] = self.bestResults[i]['balanced']  
             self.bestResults['BestStructure'] = self.listVars
             self.bestResults['BestStructureI'] = i
-            print("Structure #" + str(i) + " " * (17 - len("Structure #" + str(i) + " ")) + " : P(" + self.given + "|", end="")
+            self.showS("Structure #" + str(i) + " " * (17 - len("Structure #" + str(i) + " ")) + " : P(" + self.given + "|", "")
             for index,variable in enumerate(self.bestResults[i]['Structure']):
                 #print(index,variable)
                 if variable != self.given:
-                    print(variable, end="")
+                    self.showS(variable, "")
                 if index < len(self.bestResults[i]['Structure']) - 1 and index > 0:
-                    print(",", end="")
-            print(")")
-            print("Log Likelihood   : " + str(round(self.bestResults[i]['LL'], self.dp)))
-            print("BIC score        : " + str(round(self.bestResults[i]['BIC'], self.dp)))
-            print("Test results")
-            print("------------")
-            print("Balanced Acc     : " + str(round(self.bestResults[i]['balanced'] * 100.0, self.dp)) + "%")
-            print("Std Accuracy     : " + str(round(self.bestResults[i]['accuracy'] * 100, self.dp)) + "%")
-            print("Area under curve : " + str(round(self.bestResults[i]['auc'], self.dp)))
-            print("KL divergence    : " + str(round(self.bestResults[i]['kl'], self.dp)))
-            print("Brier score      : " + str(round(self.bestResults[i]['brier'], self.dp)))
-            print("F1-score         : " + str(round(self.bestResults[i]['F1'], self.dp)))
-            print("Confusion matrix : " + str(self.bestResults[i]['Confusion']))
-            print("Inference time   : " + str(round(self.bestResults[i]['InferenceT'], self.dp)) + " seconds")
-            print()
+                    self.showS(",", "")
+            self.showS(")")
+            self.showS("Log Likelihood   : " + str(round(self.bestResults[i]['LL'], self.dp)))
+            self.showS("BIC score        : " + str(round(self.bestResults[i]['BIC'], self.dp)))
+            self.showS("Test results")
+            self.showS("------------")
+            self.showS("Balanced Acc     : " + str(round(self.bestResults[i]['balanced'] * 100.0, self.dp)) + "%")
+            self.showS("Std Accuracy     : " + str(round(self.bestResults[i]['accuracy'] * 100, self.dp)) + "%")
+            self.showS("Area under curve : " + str(round(self.bestResults[i]['auc'], self.dp)))
+            self.showS("KL divergence    : " + str(round(self.bestResults[i]['kl'], self.dp)))
+            self.showS("Brier score      : " + str(round(self.bestResults[i]['brier'], self.dp)))
+            self.showS("F1-score         : " + str(round(self.bestResults[i]['F1'], self.dp)))
+            self.showS("Confusion matrix : " + str(self.bestResults[i]['Confusion']))
+            self.showS("Inference time   : " + str(round(self.bestResults[i]['InferenceT'], self.dp)) + " seconds")
+            self.showS()
 
     #################
     # logLikelihood #
@@ -662,6 +774,7 @@ class NaiveBayes:
         All learning probabilities can be displayed or logged.
         '''
         self.show(self.fileName)
+        self.show()
         self.show("Conditional Probability Tables")
         self.show("------------------------------")
         for item in self.learnt.items():
@@ -872,7 +985,7 @@ def main(argv):
         
         # Only need except due to for loop
         except KeyError as e:
-            print("All tests have been run. Please see results folder.")
+            print("All tests have been run. Please see results folder.",e)
             quit()
         else:
             #print(common)

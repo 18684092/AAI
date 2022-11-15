@@ -1,0 +1,24 @@
+Training on data/play_tennis-train.csv
+--------------------------------------
+
+Training time: 0.001 seconds
+
+Testing on data/play_tennis-test.csv
+------------------------------------
+Structure #0     : P(PT|O,T,H,W)
+Log Likelihood   : -55.091
+BIC score        : -84.121
+Test results
+------------
+Balanced Acc     : 100.0%
+Std Accuracy     : 100.0%
+Area under curve : nan
+KL divergence    : -0.0
+Brier score      : 0.541
+F1-score         : 0.0
+Confusion matrix : {}
+Inference time   : 0.0 seconds
+
+
+Testing time: 0.002 seconds to find the best structure from 1 structures
+

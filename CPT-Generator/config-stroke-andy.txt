@@ -1,0 +1,5 @@
+name:Stroke
+
+random_variables:HearDisease(heart_disease);Gender(gender);WorkType(work_type);Residence_Type(Residence_type);Hypertension(hypertension);Stroke(stroke);Age(age);EverMarried(ever_married);BMI(bmi);AvgGlucoseLevel(avg_glucose_level);SmokingStatus(smoking_status)
+
+structure:P(stroke);P(stroke|heart_disease,gender,work_type,Residence_type,hypertension,age,ever_married,bmi,avg_glucose_level,smoking_status)

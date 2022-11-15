@@ -1,0 +1,24 @@
+Training on data/stroke-data-discretized-train.csv
+--------------------------------------------------
+
+Training time: 0.046 seconds
+
+Testing on data/stroke-data-discretized-test.csv
+------------------------------------------------
+Structure #0     : P(stroke|gender,age,hypertension,heart_disease,ever_married,work_type,Residence_type,avg_glucose_level,bmi,smoking_status)
+Log Likelihood   : -36028.123
+BIC score        : -36328.043
+Test results
+------------
+Balanced Acc     : 58.041%
+Std Accuracy     : 92.909%
+Area under curve : 0.03
+KL divergence    : 62.601
+Brier score      : 0.853
+F1-score         : 0.19
+Confusion matrix : {'TN': 883, 'FP': 36, 'FN': 32, 'TP': 8}
+Inference time   : 0.588 seconds
+
+
+Testing time: 0.643 seconds to find the best structure from 1 structures
+
