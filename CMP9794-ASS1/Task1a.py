@@ -147,7 +147,10 @@ class NaiveBayes:
                     self.variables.append(v.split('=')[0].replace("'",''))
                 self.variables.append(self.given)
                 self.answerQuery(0, query)
-            
+
+    #################        
+    # priorSampling #
+    #################        
     def priorSampling(self):
         # Move given/target to the back
         for index, var in enumerate(self.listVars):
@@ -166,19 +169,21 @@ class NaiveBayes:
                 priorDict = {k: v for k, v in sorted(priorDict.items(), key=lambda item: item[1])}
                 rn = random.uniform(0,1)
                 for index,pProb in enumerate(priorDict.keys()):
+                    # NOTE an improvement here would be to test duplicate results and choose
+                    # one randomly
                     if rn < priorDict[pProb] or index == len(priorDict) - 1:
                         v = pProb.replace("P("+variable+"='",'').replace("')",'')
                         sample.append(v)
                         break
             samples.append(sample)
 
+        # Write samples to CSV file
         with open(self.outFile + "-priors.csv", 'w') as fp:
             for index, variable in enumerate(self.listVars):
                 fp.write(variable)
                 if index < len(self.listVars) - 1:
                     fp.write(',')
             fp.write('\n')
-
             for sample in samples:
                 for index, attribute in enumerate(sample):
                     fp.write(attribute)
@@ -186,11 +191,6 @@ class NaiveBayes:
                         fp.write(',')
                 fp.write('\n')
             
-
-
-
-        
-
     #################
     # answerQueries #
     #################
