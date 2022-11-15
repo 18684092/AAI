@@ -17,8 +17,78 @@ KL divergence    : 114.473
 Brier score      : 0.229
 F1-score         : 0.865
 Confusion matrix : {'TN': 97, 'FP': 46, 'FN': 50, 'TP': 307}
-Inference time   : 0.395 seconds
+Inference time   : 0.416 seconds
+
+Structure #4     : P(Lung_cancer|Smoking,Yellow_Fingers,Anxiety,Peer_Pressure,Genetics,Attention_Disorder,Born_an_Even_Day,Fatigue,Allergy,Coughing)
+Log Likelihood   : -9148.511
+BIC score        : -9302.088
+Test results
+------------
+Balanced Acc     : 78.591%
+Std Accuracy     : 81.4%
+Area under curve : 0.669
+KL divergence    : 107.471
+Brier score      : 0.225
+F1-score         : 0.867
+Confusion matrix : {'TN': 103, 'FP': 40, 'FN': 53, 'TP': 304}
+Inference time   : 0.015 seconds
+
+Structure #6     : P(Lung_cancer|Smoking,Yellow_Fingers,Anxiety,Peer_Pressure,Genetics,Born_an_Even_Day,Car_Accident,Fatigue,Allergy,Coughing)
+Log Likelihood   : -9078.54
+BIC score        : -9232.117
+Test results
+------------
+Balanced Acc     : 78.871%
+Std Accuracy     : 81.8%
+Area under curve : 0.659
+KL divergence    : 114.043
+Brier score      : 0.229
+F1-score         : 0.871
+Confusion matrix : {'TN': 103, 'FP': 40, 'FN': 51, 'TP': 306}
+Inference time   : 0.015 seconds
+
+Structure #9     : P(Lung_cancer|Smoking,Yellow_Fingers,Peer_Pressure,Genetics,Attention_Disorder,Born_an_Even_Day,Car_Accident,Fatigue,Allergy,Coughing)
+Log Likelihood   : -9039.612
+BIC score        : -9193.189
+Test results
+------------
+Balanced Acc     : 79.501%
+Std Accuracy     : 82.4%
+Area under curve : 0.67
+KL divergence    : 110.532
+Brier score      : 0.223
+F1-score         : 0.875
+Confusion matrix : {'TN': 104, 'FP': 39, 'FN': 49, 'TP': 308}
+Inference time   : 0.015 seconds
+
+Structure #773   : P(Lung_cancer|Smoking,Peer_Pressure,Genetics,Born_an_Even_Day,Allergy,Coughing)
+Log Likelihood   : -5814.92
+BIC score        : -5909.992
+Test results
+------------
+Balanced Acc     : 79.575%
+Std Accuracy     : 85.2%
+Area under curve : 0.813
+KL divergence    : 79.446
+Brier score      : 0.174
+F1-score         : 0.899
+Confusion matrix : {'TN': 95, 'FP': 48, 'FN': 26, 'TP': 331}
+Inference time   : 0.011 seconds
+
+Structure #1178  : P(Lung_cancer|Smoking,Peer_Pressure,Genetics,Allergy,Coughing)
+Log Likelihood   : -4775.439
+BIC score        : -4855.885
+Test results
+------------
+Balanced Acc     : 79.853%
+Std Accuracy     : 83.8%
+Area under curve : 0.801
+KL divergence    : 79.621
+Brier score      : 0.174
+F1-score         : 0.887
+Confusion matrix : {'TN': 101, 'FP': 42, 'FN': 39, 'TP': 318}
+Inference time   : 0.011 seconds
 
 
-Testing time: 0.418 seconds to find the best structure from 1 structures
+Testing time: 33.83 seconds to find the best structure from 2047 structures
 

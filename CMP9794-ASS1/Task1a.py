@@ -973,7 +973,7 @@ def main(argv):
     
     # NOTE reduce 10 to number of files in config
     # needs to be automated 
-    for n in range(1, 6):
+    for n in range(1, 10):
         try:
             # Queries for this network
             q = [queries[key] for key in queries.keys() if "query"+str(n) in key]

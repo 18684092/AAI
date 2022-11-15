@@ -1,0 +1,164 @@
+Training on data/heart-data-discretized-train.csv
+-------------------------------------------------
+
+Training time: 0.013 seconds
+
+Testing on data/heart-data-discretized-test.csv
+-----------------------------------------------
+Structure #0     : P(target|age,sex,cp,trestbps,chol,fbs,restecg,thalach,exang,oldpeak,slope,ca,thal)
+Log Likelihood   : -10033.74
+BIC score        : -10375.477
+Test results
+------------
+Balanced Acc     : 85.219%
+Std Accuracy     : 85.377%
+Area under curve : 0.525
+KL divergence    : 30.786
+Brier score      : 0.382
+F1-score         : 0.865
+Confusion matrix : {'TN': 82, 'FP': 17, 'FN': 14, 'TP': 99}
+Inference time   : 0.179 seconds
+
+Structure #5     : P(target|age,sex,cp,trestbps,chol,fbs,restecg,thalach,oldpeak,slope,ca,thal)
+Log Likelihood   : -9596.219
+BIC score        : -9924.555
+Test results
+------------
+Balanced Acc     : 85.662%
+Std Accuracy     : 85.849%
+Area under curve : 0.528
+KL divergence    : 33.317
+Brier score      : 0.383
+F1-score         : 0.87
+Confusion matrix : {'TN': 82, 'FP': 17, 'FN': 13, 'TP': 100}
+Inference time   : 0.008 seconds
+
+Structure #9     : P(target|age,sex,cp,trestbps,fbs,restecg,thalach,exang,oldpeak,slope,ca,thal)
+Log Likelihood   : -9221.44
+BIC score        : -9529.674
+Test results
+------------
+Balanced Acc     : 85.725%
+Std Accuracy     : 85.849%
+Area under curve : 0.525
+KL divergence    : 30.989
+Brier score      : 0.381
+F1-score         : 0.868
+Confusion matrix : {'TN': 83, 'FP': 16, 'FN': 14, 'TP': 99}
+Inference time   : 0.008 seconds
+
+Structure #10    : P(target|age,sex,cp,chol,fbs,restecg,thalach,exang,oldpeak,slope,ca,thal)
+Log Likelihood   : -9022.497
+BIC score        : -9330.731
+Test results
+------------
+Balanced Acc     : 86.042%
+Std Accuracy     : 86.321%
+Area under curve : 0.533
+KL divergence    : 28.465
+Brier score      : 0.377
+F1-score         : 0.876
+Confusion matrix : {'TN': 81, 'FP': 18, 'FN': 11, 'TP': 102}
+Inference time   : 0.008 seconds
+
+Structure #28    : P(target|age,sex,cp,trestbps,chol,fbs,restecg,oldpeak,slope,ca,thal)
+Log Likelihood   : -8620.423
+BIC score        : -8915.256
+Test results
+------------
+Balanced Acc     : 86.104%
+Std Accuracy     : 86.321%
+Area under curve : 0.516
+KL divergence    : 33.671
+Brier score      : 0.376
+F1-score         : 0.874
+Confusion matrix : {'TN': 82, 'FP': 17, 'FN': 12, 'TP': 101}
+Inference time   : 0.008 seconds
+
+Structure #57    : P(target|age,sex,cp,chol,restecg,thalach,exang,oldpeak,slope,ca,thal)
+Log Likelihood   : -8677.816
+BIC score        : -8972.648
+Test results
+------------
+Balanced Acc     : 86.484%
+Std Accuracy     : 86.792%
+Area under curve : 0.533
+KL divergence    : 28.331
+Brier score      : 0.377
+F1-score         : 0.88
+Confusion matrix : {'TN': 81, 'FP': 18, 'FN': 10, 'TP': 103}
+Inference time   : 0.007 seconds
+
+Structure #58    : P(target|age,sex,cp,fbs,restecg,thalach,exang,oldpeak,slope,ca,thal)
+Log Likelihood   : -8210.198
+BIC score        : -8484.928
+Test results
+------------
+Balanced Acc     : 86.989%
+Std Accuracy     : 87.264%
+Area under curve : 0.53
+KL divergence    : 28.832
+Brier score      : 0.377
+F1-score         : 0.884
+Confusion matrix : {'TN': 82, 'FP': 17, 'FN': 10, 'TP': 103}
+Inference time   : 0.008 seconds
+
+Structure #190   : P(target|age,sex,cp,chol,fbs,restecg,oldpeak,slope,ca,thal)
+Log Likelihood   : -7609.181
+BIC score        : -7870.509
+Test results
+------------
+Balanced Acc     : 87.052%
+Std Accuracy     : 87.264%
+Area under curve : 0.521
+KL divergence    : 31.458
+Brier score      : 0.373
+F1-score         : 0.883
+Confusion matrix : {'TN': 83, 'FP': 16, 'FN': 11, 'TP': 102}
+Inference time   : 0.007 seconds
+
+Structure #344   : P(target|sex,cp,trestbps,fbs,restecg,thalach,oldpeak,slope,ca,thal)
+Log Likelihood   : -7707.356
+BIC score        : -7968.684
+Test results
+------------
+Balanced Acc     : 87.557%
+Std Accuracy     : 87.736%
+Area under curve : 0.528
+KL divergence    : 29.196
+Brier score      : 0.367
+F1-score         : 0.887
+Confusion matrix : {'TN': 84, 'FP': 15, 'FN': 11, 'TP': 102}
+Inference time   : 0.007 seconds
+
+Structure #355   : P(target|sex,cp,chol,restecg,thalach,exang,oldpeak,slope,ca,thal)
+Log Likelihood   : -7601.252
+BIC score        : -7862.581
+Test results
+------------
+Balanced Acc     : 88.254%
+Std Accuracy     : 88.679%
+Area under curve : 0.536
+KL divergence    : 24.988
+Brier score      : 0.363
+F1-score         : 0.899
+Confusion matrix : {'TN': 81, 'FP': 18, 'FN': 6, 'TP': 107}
+Inference time   : 0.007 seconds
+
+Structure #2249  : P(target|cp,trestbps,chol,fbs,oldpeak,slope,ca,thal)
+Log Likelihood   : -6481.315
+BIC score        : -6709.14
+Test results
+------------
+Balanced Acc     : 88.442%
+Std Accuracy     : 88.679%
+Area under curve : 0.536
+KL divergence    : 28.76
+Brier score      : 0.352
+F1-score         : 0.897
+Confusion matrix : {'TN': 84, 'FP': 15, 'FN': 9, 'TP': 104}
+Inference time   : 0.006 seconds
+
+
+Testing time: 74.539 seconds to find the best structure from 8191 structures
+

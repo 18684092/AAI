@@ -1,7 +1,7 @@
 Training on data/stroke-data-discretized-train.csv
 --------------------------------------------------
 
-Training time: 0.046 seconds
+Training time: 0.047 seconds
 
 Testing on data/stroke-data-discretized-test.csv
 ------------------------------------------------
@@ -17,8 +17,50 @@ KL divergence    : 62.601
 Brier score      : 0.853
 F1-score         : 0.19
 Confusion matrix : {'TN': 883, 'FP': 36, 'FN': 32, 'TP': 8}
-Inference time   : 0.588 seconds
+Inference time   : 0.707 seconds
+
+Structure #1     : P(stroke|gender,age,hypertension,heart_disease,ever_married,work_type,Residence_type,avg_glucose_level,bmi)
+Log Likelihood   : -30562.305
+BIC score        : -30828.901
+Test results
+------------
+Balanced Acc     : 58.096%
+Std Accuracy     : 93.014%
+Area under curve : 0.023
+KL divergence    : 64.586
+Brier score      : 0.859
+F1-score         : 0.193
+Confusion matrix : {'TN': 884, 'FP': 35, 'FN': 32, 'TP': 8}
+Inference time   : 0.03 seconds
+
+Structure #2     : P(stroke|gender,age,hypertension,heart_disease,ever_married,work_type,Residence_type,avg_glucose_level,smoking_status)
+Log Likelihood   : -32677.159
+BIC score        : -32935.423
+Test results
+------------
+Balanced Acc     : 59.618%
+Std Accuracy     : 93.639%
+Area under curve : 0.024
+KL divergence    : 64.473
+Brier score      : 0.857
+F1-score         : 0.228
+Confusion matrix : {'TN': 889, 'FP': 30, 'FN': 31, 'TP': 9}
+Inference time   : 0.029 seconds
+
+Structure #4     : P(stroke|gender,age,hypertension,heart_disease,ever_married,work_type,avg_glucose_level,bmi,smoking_status)
+Log Likelihood   : -33153.43
+BIC score        : -33436.688
+Test results
+------------
+Balanced Acc     : 61.683%
+Std Accuracy     : 93.014%
+Area under curve : 0.031
+KL divergence    : 61.872
+Brier score      : 0.852
+F1-score         : 0.247
+Confusion matrix : {'TN': 881, 'FP': 38, 'FN': 29, 'TP': 11}
+Inference time   : 0.029 seconds
 
 
-Testing time: 0.643 seconds to find the best structure from 1 structures
+Testing time: 34.258 seconds to find the best structure from 1023 structures
 
