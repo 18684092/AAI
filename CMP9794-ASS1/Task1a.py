@@ -158,7 +158,7 @@ class NaiveBayes:
                 self.listVars += [self.listVars.pop(index)]
                 break
         samples = []
-        for i in range(0,self.pSampleCount):
+        while len(samples) != self.pSampleCount:
             sample = []
             for variable in self.listVars:
                 priorDict = {}
@@ -166,16 +166,23 @@ class NaiveBayes:
                     if "P(" + variable + "=" in pProb and "|" not in pProb:
                         line = self.learnt[pProb]
                         priorDict[pProb] = line[1]
+                # Sort key values
                 priorDict = {k: v for k, v in sorted(priorDict.items(), key=lambda item: item[1])}
-                rn = random.uniform(0,1)
-                for index,pProb in enumerate(priorDict.keys()):
-                    # NOTE an improvement here would be to test duplicate results and choose
-                    # one randomly
-                    if rn < priorDict[pProb] or index == len(priorDict) - 1:
-                        v = pProb.replace("P("+variable+"='",'').replace("')",'')
-                        sample.append(v)
-                        break
-            samples.append(sample)
+                
+                choose = []
+                while len(choose) == 0:
+                    rn = random.uniform(0,1)
+                    for index,pProb in enumerate(priorDict.keys()):
+                        if rn <= priorDict[pProb]:# or index == len(priorDict) - 1:
+                            v = pProb.replace("P("+variable+"='",'').replace("')",'')
+                            choose.append(v)
+                if len(choose) != 0:
+                    rn2 = random.randint(0, len(choose) - 1)
+                    sample.append(choose[rn2])
+            if len(sample) == len(self.listVars):        
+                samples.append(sample)
+
+                
 
         # Write samples to CSV file
         with open(self.outFile + "-priors.csv", 'w') as fp:
