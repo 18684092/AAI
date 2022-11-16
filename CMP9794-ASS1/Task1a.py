@@ -152,12 +152,18 @@ class NaiveBayes:
     # priorSampling #
     #################        
     def priorSampling(self):
-        # Move given/target to the back
+        '''
+        Reproduce samples with the same distribution as
+        the original distribution based upon CPTs
+        '''
+        # Move given/target to the back - order vars
         for index, var in enumerate(self.listVars):
             if var == self.given:
                 self.listVars += [self.listVars.pop(index)]
                 break
         samples = []
+
+        # We need a certain amount of samples
         while len(samples) != self.pSampleCount:
             sample = []
             for variable in self.listVars:
@@ -166,9 +172,10 @@ class NaiveBayes:
                     if "P(" + variable + "=" in pProb and "|" not in pProb:
                         line = self.learnt[pProb]
                         priorDict[pProb] = line[1]
-                # Sort key values
+                # Sort key values - makes assigning random pick easier
                 priorDict = {k: v for k, v in sorted(priorDict.items(), key=lambda item: item[1])}
                 
+                # Pick one of the atrributes as part of sample
                 choose = []
                 while len(choose) == 0:
                     rn = random.uniform(0,1)
@@ -176,15 +183,16 @@ class NaiveBayes:
                         if rn <= priorDict[pProb]:# or index == len(priorDict) - 1:
                             v = pProb.replace("P("+variable+"='",'').replace("')",'')
                             choose.append(v)
+                # If 2 or more samples were picked - they have same prob
+                # choose one of them
                 if len(choose) != 0:
                     rn2 = random.randint(0, len(choose) - 1)
                     sample.append(choose[rn2])
+            # A valid sample has been found
             if len(sample) == len(self.listVars):        
                 samples.append(sample)
 
-                
-
-        # Write samples to CSV file
+        # Write samples to CSV file - we can then test against this
         with open(self.outFile + "-priors.csv", 'w') as fp:
             for index, variable in enumerate(self.listVars):
                 fp.write(variable)
@@ -357,7 +365,6 @@ class NaiveBayes:
                     self.questions.append(qs)
                 count += 1
 
-
     ###########  
     # getQPos #
     ###########  
@@ -375,7 +382,6 @@ class NaiveBayes:
         d = discrete[2:-1].split('|')
         d = d[0].split('=')
         return d[0]
-
 
     #################
     # getJointProbs #
@@ -533,7 +539,6 @@ class NaiveBayes:
         self.bestResults[i]['Y_prob'] = []
         self.bestResults[i]['Y_prob_pred'] = []
 
-        
         # Get position of the target variable
         qPosition = self.getQPos()
         # Log and standard have different math operations
@@ -701,6 +706,7 @@ class NaiveBayes:
     ################
     # KLDivergence #
     ################
+    # Taken from workshop example code but modified
     def KLDivergence(self,results):
         '''
         Calculate KL divergence

@@ -17,7 +17,7 @@ KL divergence    : 30.786
 Brier score      : 0.382
 F1-score         : 0.865
 Confusion matrix : {'TN': 82, 'FP': 17, 'FN': 14, 'TP': 99}
-Inference time   : 0.217 seconds
+Inference time   : 0.212 seconds
 
 Structure #5     : P(target|age,sex,cp,trestbps,chol,fbs,restecg,thalach,oldpeak,slope,ca,thal)
 Log Likelihood   : -9596.219
@@ -73,7 +73,7 @@ KL divergence    : 33.671
 Brier score      : 0.376
 F1-score         : 0.874
 Confusion matrix : {'TN': 82, 'FP': 17, 'FN': 12, 'TP': 101}
-Inference time   : 0.008 seconds
+Inference time   : 0.007 seconds
 
 Structure #57    : P(target|age,sex,cp,chol,restecg,thalach,exang,oldpeak,slope,ca,thal)
 Log Likelihood   : -8677.816
@@ -87,7 +87,7 @@ KL divergence    : 28.331
 Brier score      : 0.377
 F1-score         : 0.88
 Confusion matrix : {'TN': 81, 'FP': 18, 'FN': 10, 'TP': 103}
-Inference time   : 0.008 seconds
+Inference time   : 0.007 seconds
 
 Structure #58    : P(target|age,sex,cp,fbs,restecg,thalach,exang,oldpeak,slope,ca,thal)
 Log Likelihood   : -8210.198
@@ -160,5 +160,5 @@ Confusion matrix : {'TN': 84, 'FP': 15, 'FN': 9, 'TP': 104}
 Inference time   : 0.006 seconds
 
 
-Testing time: 78.262 seconds to find the best structure from 8191 structures
+Testing time: 74.272 seconds to find the best structure from 8191 structures
 
