@@ -253,9 +253,9 @@ class NaiveBayes:
             F = 1 - T
             # This is for non log - just MLE
             for p in probT:
-                T *= p
+                T += p
             for p in probF:
-                F *= p
+                F += p
 
             # Normalise
             normT = T/(T+F)
@@ -833,6 +833,8 @@ class NaiveBayes:
         self.bestResults[i]['Y_prob'] = []
         self.bestResults[i]['Y_prob_pred'] = []
 
+        meanInfTime = []
+
         # Get position of the target variable
         qPosition = self.getQPos()
         # Log and standard have different math operations
@@ -876,6 +878,7 @@ class NaiveBayes:
 
         # Record time taken
         end = time.time()
+        meanInfTime.append(end-start)
         self.bestResults[i]['InferenceT'] = end - start
 
         self.bestResults[i]['balanced'] = balanced_accuracy_score(self.bestResults[i]['Y_true'], self.bestResults[i]['Y_pred']) 
@@ -903,6 +906,7 @@ class NaiveBayes:
         self.show("Correct predictions  : " + str(self.bestResults[i]['Correct']))
         self.show("Number of predictions: " + str(self.bestResults[i]['TotalQueries']))
         self.show("Balanced Accuracy    : " + str(round(self.bestResults[i]['balanced'] , self.dp)))
+        self.show("Mean Inference time  : " + str(sum(meanInfTime)/len(meanInfTime)))
         self.show()
 
         # Is this the best structure?
@@ -1278,9 +1282,8 @@ def main(argv):
     # Clear log file on run
     open(common['logfile'], 'w').close()
     
-    # NOTE reduce 10 to number of files in config
-    # needs to be automated 
-    for n in range(1, 10):
+    # the exception will catch index errors
+    for n in range(1, 20):
         try:
             # Queries for this network
             q = [queries[key] for key in queries.keys() if "query"+str(n) in key]
@@ -1289,17 +1292,13 @@ def main(argv):
             NB = NaiveBayes(bayesConfig, n, False, common)
             # Test and save results
             NB = NaiveBayes(bayesConfig, n, True, common)
+            # Run queries
             NB = NaiveBayes(bayesConfig, n, True, common, q)
         # Only need except due to for loop
         except KeyError as e:
-            print("All tests have been run. Please see results folder.",e)
+            print("All tests have been run. Please see results folder.")
             quit()
-        else:
-            #print(common)
-            print()
-            #print(bayesConfig)
-            #print()
-            #print(queries)
+
 
 ##################
 # start properly #

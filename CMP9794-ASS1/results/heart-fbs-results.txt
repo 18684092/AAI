@@ -1,0 +1,94 @@
+Training on data/heart-data-discretized-train.csv
+-------------------------------------------------
+
+Training time: 0.012 seconds
+
+Testing on data/heart-data-discretized-test.csv
+-----------------------------------------------
+Structure #0     : P(fbs|target,age,sex,cp,trestbps,chol,restecg,thalach,exang,oldpeak,slope,ca,thal)
+Log Likelihood   : -10686.815
+BIC score        : -11028.552
+Test results
+------------
+Balanced Acc     : 55.293%
+Std Accuracy     : 85.377%
+Area under curve : 0.017
+KL divergence    : 51.57
+Brier score      : 0.74
+F1-score         : 0.205
+Confusion matrix : {'TN': 177, 'FP': 5, 'FN': 26, 'TP': 4}
+Inference time   : 0.165 seconds
+
+Structure #6     : P(fbs|target,age,sex,cp,trestbps,chol,restecg,exang,oldpeak,slope,ca,thal)
+Log Likelihood   : -9646.67
+BIC score        : -9954.903
+Test results
+------------
+Balanced Acc     : 55.568%
+Std Accuracy     : 85.849%
+Area under curve : 0.009
+KL divergence    : 54.151
+Brier score      : 0.746
+F1-score         : 0.211
+Confusion matrix : {'TN': 178, 'FP': 4, 'FN': 26, 'TP': 4}
+Inference time   : 0.008 seconds
+
+Structure #8     : P(fbs|target,age,sex,cp,trestbps,restecg,thalach,exang,oldpeak,slope,ca,thal)
+Log Likelihood   : -9875.323
+BIC score        : -10183.557
+Test results
+------------
+Balanced Acc     : 56.117%
+Std Accuracy     : 86.792%
+Area under curve : 0.016
+KL divergence    : 51.621
+Brier score      : 0.739
+F1-score         : 0.222
+Confusion matrix : {'TN': 180, 'FP': 2, 'FN': 26, 'TP': 4}
+Inference time   : 0.007 seconds
+
+Structure #23    : P(fbs|target,age,sex,cp,trestbps,chol,restecg,thalach,slope,ca,thal)
+Log Likelihood   : -9362.766
+BIC score        : -9657.598
+Test results
+------------
+Balanced Acc     : 57.234%
+Std Accuracy     : 86.321%
+Area under curve : 0.02
+KL divergence    : 50.848
+Brier score      : 0.74
+F1-score         : 0.256
+Confusion matrix : {'TN': 178, 'FP': 4, 'FN': 25, 'TP': 5}
+Inference time   : 0.007 seconds
+
+Structure #83    : P(fbs|age,sex,cp,trestbps,chol,restecg,thalach,exang,slope,ca,thal)
+Log Likelihood   : -9324.486
+BIC score        : -9619.319
+Test results
+------------
+Balanced Acc     : 57.784%
+Std Accuracy     : 87.264%
+Area under curve : 0.015
+KL divergence    : 50.678
+Brier score      : 0.743
+F1-score         : 0.27
+Confusion matrix : {'TN': 180, 'FP': 2, 'FN': 25, 'TP': 5}
+Inference time   : 0.007 seconds
+
+Structure #2114  : P(fbs|age,cp,trestbps,chol,restecg,slope,ca,thal)
+Log Likelihood   : -7256.715
+BIC score        : -7491.24
+Test results
+------------
+Balanced Acc     : 58.059%
+Std Accuracy     : 87.736%
+Area under curve : 0.009
+KL divergence    : 52.959
+Brier score      : 0.748
+F1-score         : 0.278
+Confusion matrix : {'TN': 181, 'FP': 1, 'FN': 25, 'TP': 5}
+Inference time   : 0.006 seconds
+
+
+Testing time: 72.139 seconds to find the best structure from 8191 structures
+
