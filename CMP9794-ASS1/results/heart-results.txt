@@ -1,7 +1,7 @@
 Training on data/heart-data-discretized-train.csv
 -------------------------------------------------
 
-Training time: 0.013 seconds
+Training time: 0.012 seconds
 
 Testing on data/heart-data-discretized-test.csv
 -----------------------------------------------
@@ -17,8 +17,8 @@ KL divergence    : 30.786
 Brier score      : 0.382
 F1-score         : 0.865
 Confusion matrix : {'TN': 82, 'FP': 17, 'FN': 14, 'TP': 99}
-Inference time   : 0.193 seconds
+Inference time   : 0.157 seconds
 
 
-Testing time: 0.207 seconds to find the best structure from 1 structures
+Testing time: 0.17 seconds to find the best structure from 1 structures
 
