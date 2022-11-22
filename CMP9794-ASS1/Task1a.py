@@ -120,7 +120,6 @@ class NaiveBayes:
                 else: 
                     self.overrideDisplay = False
                 self.listVars = v
-                
                 self.readTestQueries()
                 self.answerQueries(i)
             endTest = time.time()
@@ -131,11 +130,15 @@ class NaiveBayes:
         # Test queries taken from config
         if self.queries != None and self.queries != []:
             self.loadLearnt()
+            oldLearnt = self.learnt
+
             self.total = 1
-            self.getDiscreteVariables()
-            self.getDiscretePriors()
+            #self.getDiscreteVariables()
+            #self.getDiscretePriors()
+           
+           # Standard query answering
             for query in self.queries:
-                print(query)
+                self.show("\nQuery: " + query)
                 self.questions = []
                 self.variables = []
                 q = query.split('|')[1].replace(')','').split(',')
@@ -147,6 +150,125 @@ class NaiveBayes:
                     self.variables.append(v.split('=')[0].replace("'",''))
                 self.variables.append(self.given)
                 self.answerQuery(0, query)
+
+           # Prior query answering
+            for query in self.queries:
+                self.show("\nUsing Rejection Sampling\nQuery: " + query)
+                self.questions = []
+                self.variables = []
+                q = query.split('|')[1].replace(')','').split(',')
+                a = []
+                for attrib in q:
+                    a.append(attrib.split("=")[1].replace("'",''))
+                self.questions.append(a)
+                for v in q:
+                    self.variables.append(v.split('=')[0].replace("'",''))
+                self.variables.append(self.given)
+                q = {}
+                for i,v in enumerate(self.variables):
+                    if v != self.given:
+                        q[v] = self.questions[0][i]
+                self.rejectionSampling(self.variables, query,q)
+
+
+
+    #####################        
+    # rejectionSampling #
+    #####################        
+    def rejectionSampling(self, vars, query, q):
+        '''
+        Reproduce samples with the same distribution as
+        the original distribution based upon CPTs
+        '''
+        start = time.time()
+        # Move given/target to the back - order vars
+        for index, var in enumerate(self.listVars):
+            if var == self.given:
+                self.listVars += [self.listVars.pop(index)]
+                break
+        samples = []
+
+        # We need a certain amount of samples
+
+        targetAchieved = False
+        targetCount = 0
+        count = 0
+
+        # we want a minimum of 100 samples
+        while count < self.pSampleCount or targetCount < 100:#targetAchieved == False:
+            sample = []
+
+            # I don't think we need to sample the target=0 and =1 prior, but...I am :)
+            target = '0'
+            targetProb = self.learnt["P("+self.given+"='0')"][1]
+            rnT = random.uniform(0,1)
+            
+            if rnT > 0.5: #targetProb:
+                target = '1'  
+
+            for variable in self.listVars:
+                if variable == self.given: continue
+                if variable not in vars: continue
+                priorDict = {}
+                for pProb in self.learnt.keys():
+                    if "P(" + variable + "=" in pProb and "|"+self.given+"='" +target+"'" in pProb:
+                        line = self.learnt[pProb]
+                        priorDict[pProb] = line[1]
+                # Sort key values - makes assigning random pick easier
+                priorDict = {k: v for k, v in sorted(priorDict.items(), key=lambda item: item[1])}
+                # Pick one of the atrributes as part of sample
+                choose = []
+                while len(choose) == 0:
+                    rn = random.uniform(0,1)
+                    lower = 0
+                    for index,pProb in enumerate(priorDict.keys()):
+                        if rn > lower and rn <= priorDict[pProb] + lower:# or index == len(priorDict.keys())-1:
+                            var = pProb.split("|")[0].replace("P(","")
+                            v = pProb.split("|")[0]
+                            v = v.replace("P("+variable+"='",'').replace("'","")
+                            choose.append(var)
+                        lower = priorDict[pProb]
+                
+                # If 2 or more samples were picked - they have same prob
+                # choose one of them
+                if len(choose) != 0:
+                    rn2 = random.randint(0, len(choose) - 1)
+                    sample.append(choose[rn2])
+                    count += 1
+
+            sample.append(target)
+
+            # Just check that we have enough samples that match - it is said
+            # that 100 samples are needed
+            found = True
+            for v in sample:
+                if v not in query:
+                    found = False
+                    break
+            if found == True:
+                targetAchieved = True
+                targetCount += 1
+
+            # A valid sample has been found
+            if len(sample) == len(vars):     
+                samples.append(sample)
+
+        # MMMMmmmmmm..... I might be drunk :)
+        T = 0; F = 0
+        for s in samples:
+            a = []
+            for v in q.keys():
+                a.append(v+"='"+q[v]+"'")
+            t = a.copy(); f = a.copy(); tr = a.copy(); fr = a.copy(); tr.reverse()
+            fr.reverse(); tr.append('1'); fr.append('0'); t.append('1'); f.append('0')
+            if s == t or s == tr: T +=1
+            if s == f or s == fr: F +=1
+        
+        end = time.time()
+        print("Samples requested: " + str(self.pSampleCount) + " Samples needed: " +str(count))
+        print("Counts     <"+self.given + "='" + self.positivePred + "'=" + str(T) + " , <"+self.given + "='0'=" + str(F) + ">")
+        print("Normalised <"+self.given + "='" + self.positivePred + "'=" + str(T/(T+F)) + " , "+self.given + "='0'=" + str(F/(T+F)) + ">")
+        print("Inference time: " + str(end - start) + " seconds")
 
     #################        
     # priorSampling #
@@ -162,26 +284,33 @@ class NaiveBayes:
                 self.listVars += [self.listVars.pop(index)]
                 break
         samples = []
-
+        count = 0
         # We need a certain amount of samples
         while len(samples) != self.pSampleCount:
             sample = []
             for variable in self.listVars:
+                if variable == self.given: continue
                 priorDict = {}
+                # Pick target
+                rn = random.uniform(0,1)
+                target = '0'
+                if rn >= 0.5:
+                    target = '1'
+
                 for pProb in self.learnt.keys():
-                    if "P(" + variable + "=" in pProb and "|" not in pProb:
+                    if "P(" + variable + "=" in pProb and "|"+self.given+"='"+target in pProb:
                         line = self.learnt[pProb]
                         priorDict[pProb] = line[1]
                 # Sort key values - makes assigning random pick easier
                 priorDict = {k: v for k, v in sorted(priorDict.items(), key=lambda item: item[1])}
-                
+
                 # Pick one of the atrributes as part of sample
                 choose = []
                 while len(choose) == 0:
                     rn = random.uniform(0,1)
                     for index,pProb in enumerate(priorDict.keys()):
-                        if rn <= priorDict[pProb]:# or index == len(priorDict) - 1:
-                            v = pProb.replace("P("+variable+"='",'').replace("')",'')
+                        if rn < priorDict[pProb]: # replace target=
+                            v = pProb.replace("P("+variable+"='",'').replace("'|" + self.given + "='" + target + "')", '')
                             choose.append(v)
                 # If 2 or more samples were picked - they have same prob
                 # choose one of them
@@ -189,9 +318,9 @@ class NaiveBayes:
                     rn2 = random.randint(0, len(choose) - 1)
                     sample.append(choose[rn2])
             # A valid sample has been found
-            if len(sample) == len(self.listVars):        
+            if len(sample) == len(self.listVars) - 1:    
+                sample.append(target)    
                 samples.append(sample)
-
         # Write samples to CSV file - we can then test against this
         with open(self.outFile + "-priors.csv", 'w') as fp:
             for index, variable in enumerate(self.listVars):

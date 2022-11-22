@@ -1,24 +1,24 @@
 Training on results/lung-priors.csv
 -----------------------------------
 
-Training time: 1.055 seconds
+Training time: 0.1 seconds
 
 Testing on data/lung_cancer-test.csv
 ------------------------------------
 Structure #0     : P(Lung_cancer|Smoking,Yellow_Fingers,Anxiety,Peer_Pressure,Genetics,Attention_Disorder,Born_an_Even_Day,Car_Accident,Fatigue,Allergy,Coughing)
-Log Likelihood   : -609247.029
-BIC score        : -609511.826
+Log Likelihood   : -68158.581
+BIC score        : -68370.419
 Test results
 ------------
-Balanced Acc     : 50.0%
-Std Accuracy     : 71.4%
-Area under curve : 1.0
-KL divergence    : 76.035
-Brier score      : 0.037
-F1-score         : 0.833
-Confusion matrix : {'TN': 0, 'FP': 143, 'FN': 0, 'TP': 357}
-Inference time   : 0.392 seconds
+Balanced Acc     : 76.704%
+Std Accuracy     : 80.8%
+Area under curve : 0.284
+KL divergence    : 178.348
+Brier score      : 0.259
+F1-score         : 0.865
+Confusion matrix : {'TN': 96, 'FP': 47, 'FN': 49, 'TP': 308}
+Inference time   : 0.41 seconds
 
 
-Testing time: 435.217 seconds to find the best structure from 2047 structures
+Testing time: 0.533 seconds to find the best structure from 1 structures
 
