@@ -61,3 +61,6 @@ F1-score         : 0.247
 Confusion matrix : {'TN': 881, 'FP': 38, 'FN': 29, 'TP': 11}
 Inference time   : 0.027 seconds
 
+
+Testing time: 33.718 seconds to find the best structure from 1023 structures
+

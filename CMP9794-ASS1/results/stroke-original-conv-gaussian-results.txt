@@ -1,5 +1,5 @@
 Gaussian learning of means/std devs for data/stroke-data-original-train-conv2num.csv
-Gaussian learning time:0.017217397689819336
+Gaussian learning time:0.016939640045166016
 
 0.002948524967891325, 0.9970514750321087, 0, 1, wrong
 0.02492838145884451, 0.9750716185411555, 0, 1, wrong
@@ -964,7 +964,7 @@ Gaussian learning time:0.017217397689819336
 STD Accuracy: 0.8686131386861314
 Balanced Acc: 0.2946273122959739
 Confusion matrix: TN:105 FP:814 FN:21 TP:19
-Overall Test time: 0.02216339111328125
-Mean inference time: 8.957726614815848e-06
+Overall Test time: 0.020959854125976562
+Mean inference time: 8.06595660101261e-06
 AUC: 0.2946273122959739
 F1-score: 0.04352806414662085
