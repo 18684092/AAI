@@ -17,7 +17,7 @@ KL divergence    : 114.576
 Brier score      : 0.229
 F1-score         : 0.865
 Confusion matrix : {'TN': 97, 'FP': 46, 'FN': 50, 'TP': 307}
-Inference time   : 0.329 seconds
+Inference time   : 0.415 seconds
 
 Structure #4     : P(Lung_cancer|Smoking,Yellow_Fingers,Anxiety,Peer_Pressure,Genetics,Attention_Disorder,Born_an_Even_Day,Fatigue,Allergy,Coughing)
 Log Likelihood   : -9148.425
@@ -90,5 +90,5 @@ Confusion matrix : {'TN': 101, 'FP': 42, 'FN': 39, 'TP': 318}
 Inference time   : 0.009 seconds
 
 
-Testing time: 31.6 seconds to find the best structure from 2047 structures
+Testing time: 31.626 seconds to find the best structure from 2047 structures
 

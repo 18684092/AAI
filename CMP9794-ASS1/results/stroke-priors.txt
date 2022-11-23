@@ -1,0 +1,97 @@
+Conditional Probability Tables
+------------------------------
+P(gender='Male') = 372/1000 = 0.372
+P(gender='Female') = 628/1000 = 0.628
+P(age='4') = 447/1000 = 0.447
+P(age='3') = 265/1000 = 0.265
+P(age='0') = 73/1000 = 0.073
+P(age='1') = 62/1000 = 0.062
+P(age='2') = 153/1000 = 0.153
+P(hypertension='0') = 895/1000 = 0.895
+P(hypertension='1') = 105/1000 = 0.105
+P(heart_disease='0') = 915/1000 = 0.915
+P(heart_disease='1') = 85/1000 = 0.085
+P(ever_married='No') = 180/1000 = 0.18
+P(ever_married='Yes') = 820/1000 = 0.82
+P(work_type='Private') = 768/1000 = 0.768
+P(work_type='Govt_job') = 81/1000 = 0.081
+P(work_type='children') = 37/1000 = 0.037
+P(work_type='Self-employed') = 114/1000 = 0.114
+P(Residence_type='Urban') = 571/1000 = 0.571
+P(Residence_type='Rural') = 429/1000 = 0.429
+P(avg_glucose_level='1') = 150/1000 = 0.15
+P(avg_glucose_level='0') = 705/1000 = 0.705
+P(avg_glucose_level='3') = 100/1000 = 0.1
+P(avg_glucose_level='2') = 21/1000 = 0.021
+P(avg_glucose_level='4') = 24/1000 = 0.024
+P(bmi='0') = 378/1000 = 0.378
+P(bmi='1') = 608/1000 = 0.608
+P(bmi='2') = 14/1000 = 0.014
+P(smoking_status='never smoked') = 460/1000 = 0.46
+P(smoking_status='formerly smoked') = 173/1000 = 0.173
+P(smoking_status='Unknown') = 242/1000 = 0.242
+P(smoking_status='smokes') = 125/1000 = 0.125
+P(stroke='1') = 501/1000 = 0.501
+P(stroke='0') = 499/1000 = 0.499
+P(gender='Male'|stroke='1') = 180/501 = 0.359
+P(gender='Male'|stroke='0') = 192/499 = 0.385
+P(gender='Female'|stroke='1') = 321/501 = 0.641
+P(gender='Female'|stroke='0') = 307/499 = 0.615
+P(age='4'|stroke='1') = 224/501 = 0.447
+P(age='4'|stroke='0') = 223/499 = 0.447
+P(age='3'|stroke='1') = 128/501 = 0.255
+P(age='3'|stroke='0') = 137/499 = 0.275
+P(age='0'|stroke='1') = 34/501 = 0.068
+P(age='0'|stroke='0') = 39/499 = 0.078
+P(age='1'|stroke='1') = 36/501 = 0.072
+P(age='1'|stroke='0') = 26/499 = 0.052
+P(age='2'|stroke='1') = 79/501 = 0.158
+P(age='2'|stroke='0') = 74/499 = 0.148
+P(hypertension='0'|stroke='1') = 455/501 = 0.908
+P(hypertension='0'|stroke='0') = 440/499 = 0.882
+P(hypertension='1'|stroke='1') = 46/501 = 0.092
+P(hypertension='1'|stroke='0') = 59/499 = 0.118
+P(heart_disease='0'|stroke='1') = 457/501 = 0.912
+P(heart_disease='0'|stroke='0') = 458/499 = 0.918
+P(heart_disease='1'|stroke='1') = 44/501 = 0.088
+P(heart_disease='1'|stroke='0') = 41/499 = 0.082
+P(ever_married='No'|stroke='1') = 96/501 = 0.192
+P(ever_married='No'|stroke='0') = 84/499 = 0.168
+P(ever_married='Yes'|stroke='1') = 405/501 = 0.808
+P(ever_married='Yes'|stroke='0') = 415/499 = 0.832
+P(work_type='Private'|stroke='1') = 384/501 = 0.766
+P(work_type='Private'|stroke='0') = 384/499 = 0.77
+P(work_type='Govt_job'|stroke='1') = 41/501 = 0.082
+P(work_type='Govt_job'|stroke='0') = 40/499 = 0.08
+P(work_type='children'|stroke='1') = 19/501 = 0.038
+P(work_type='children'|stroke='0') = 18/499 = 0.036
+P(work_type='Self-employed'|stroke='1') = 57/501 = 0.114
+P(work_type='Self-employed'|stroke='0') = 57/499 = 0.114
+P(Residence_type='Urban'|stroke='1') = 278/501 = 0.555
+P(Residence_type='Urban'|stroke='0') = 293/499 = 0.587
+P(Residence_type='Rural'|stroke='1') = 223/501 = 0.445
+P(Residence_type='Rural'|stroke='0') = 206/499 = 0.413
+P(avg_glucose_level='1'|stroke='1') = 79/501 = 0.158
+P(avg_glucose_level='1'|stroke='0') = 71/499 = 0.142
+P(avg_glucose_level='0'|stroke='1') = 354/501 = 0.707
+P(avg_glucose_level='0'|stroke='0') = 351/499 = 0.703
+P(avg_glucose_level='3'|stroke='1') = 48/501 = 0.096
+P(avg_glucose_level='3'|stroke='0') = 52/499 = 0.104
+P(avg_glucose_level='2'|stroke='1') = 8/501 = 0.016
+P(avg_glucose_level='2'|stroke='0') = 13/499 = 0.026
+P(avg_glucose_level='4'|stroke='1') = 12/501 = 0.024
+P(avg_glucose_level='4'|stroke='0') = 12/499 = 0.024
+P(bmi='0'|stroke='1') = 192/501 = 0.383
+P(bmi='0'|stroke='0') = 186/499 = 0.373
+P(bmi='1'|stroke='1') = 301/501 = 0.601
+P(bmi='1'|stroke='0') = 307/499 = 0.615
+P(bmi='2'|stroke='1') = 8/501 = 0.016
+P(bmi='2'|stroke='0') = 6/499 = 0.012
+P(smoking_status='never smoked'|stroke='1') = 233/501 = 0.465
+P(smoking_status='never smoked'|stroke='0') = 227/499 = 0.455
+P(smoking_status='formerly smoked'|stroke='1') = 126/501 = 0.251
+P(smoking_status='formerly smoked'|stroke='0') = 47/499 = 0.094
+P(smoking_status='Unknown'|stroke='1') = 75/501 = 0.15
+P(smoking_status='Unknown'|stroke='0') = 167/499 = 0.335
+P(smoking_status='smokes'|stroke='1') = 67/501 = 0.134
+P(smoking_status='smokes'|stroke='0') = 58/499 = 0.116

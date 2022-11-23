@@ -20,5 +20,5 @@ Confusion matrix : {}
 Inference time   : 0.0 seconds
 
 
-Testing time: 0.013 seconds to find the best structure from 15 structures
+Testing time: 0.014 seconds to find the best structure from 15 structures
 

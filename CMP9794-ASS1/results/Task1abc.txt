@@ -53,7 +53,7 @@ Correct
 Correct predictions  : 1
 Number of predictions: 1
 Balanced Accuracy    : 1.0
-Mean Inference time  : 0.0003209114074707031
+Mean Inference time  : 0.0003864765167236328
 
 data/lung_cancer-train.csv
 
@@ -5137,7 +5137,7 @@ tn, fp, fn, tp: 97 46 50 307
 Correct predictions  : 404
 Number of predictions: 500
 Balanced Accuracy    : 0.769
-Mean Inference time  : 0.32941579818725586
+Mean Inference time  : 0.41452622413635254
 
 data/heart-data-discretized-train.csv
 
@@ -7425,7 +7425,7 @@ tn, fp, fn, tp: 82 17 19 94
 Correct predictions  : 176
 Number of predictions: 212
 Balanced Accuracy    : 0.83
-Mean Inference time  : 0.16266489028930664
+Mean Inference time  : 0.20136165618896484
 
 
 Query: P(target|sex='0',cp='3')
@@ -7486,34 +7486,34 @@ target=1 with a prob of 0.707
 
 Using Rejection Sampling
 Query: P(target|sex='0',cp='3')
-Samples requested: 10000 Samples needed: 39692
-Counts     <target='1'=627 , <target='0'=100>
-Normalised <target='1'=0.8624484181568088 , target='0'=0.1375515818431912>
-Inference time: 0.38004422187805176 seconds
+Samples requested: 10000 Samples needed: 42444
+Counts     <target='1'=708 , <target='0'=100>
+Normalised <target='1'=0.8762376237623762 , target='0'=0.12376237623762376>
+Inference time: 0.40757131576538086 seconds
 
 
 Using Rejection Sampling
 Query: P(target|age='2',trestbps='1')
 Samples requested: 10000 Samples needed: 10000
-Counts     <target='1'=514 , <target='0'=392>
-Normalised <target='1'=0.5673289183222958 , target='0'=0.4326710816777042>
-Inference time: 0.10528802871704102 seconds
+Counts     <target='1'=458 , <target='0'=337>
+Normalised <target='1'=0.5761006289308176 , target='0'=0.4238993710691824>
+Inference time: 0.10680747032165527 seconds
 
 
 Using Rejection Sampling
 Query: P(target|trestbps='4',age='1')
-Samples requested: 10000 Samples needed: 543564
-Counts     <target='1'=100 , <target='0'=938>
-Normalised <target='1'=0.09633911368015415 , target='0'=0.9036608863198459>
-Inference time: 5.895041465759277 seconds
+Samples requested: 10000 Samples needed: 547138
+Counts     <target='1'=100 , <target='0'=980>
+Normalised <target='1'=0.09259259259259259 , target='0'=0.9074074074074074>
+Inference time: 5.948615550994873 seconds
 
 
 Using Rejection Sampling
 Query: P(target|age='2',cp='3',chol='1')
-Samples requested: 10000 Samples needed: 19665
-Counts     <target='1'=100 , <target='0'=27>
-Normalised <target='1'=0.7874015748031497 , target='0'=0.2125984251968504>
-Inference time: 0.1996169090270996 seconds
+Samples requested: 10000 Samples needed: 19962
+Counts     <target='1'=100 , <target='0'=23>
+Normalised <target='1'=0.8130081300813008 , target='0'=0.18699186991869918>
+Inference time: 0.2050328254699707 seconds
 
 data/heart-data-discretized-train.csv
 
@@ -9801,7 +9801,7 @@ tn, fp, fn, tp: 117 33 17 45
 Correct predictions  : 162
 Number of predictions: 212
 Balanced Accuracy    : 0.753
-Mean Inference time  : 0.16019606590270996
+Mean Inference time  : 0.19834589958190918
 
 data/heart-data-discretized-train.csv
 
@@ -12089,7 +12089,7 @@ tn, fp, fn, tp: 42 18 30 122
 Correct predictions  : 164
 Number of predictions: 212
 Balanced Accuracy    : 0.751
-Mean Inference time  : 0.16325759887695312
+Mean Inference time  : 0.2108469009399414
 
 data/heart-data-discretized-train.csv
 
@@ -14377,7 +14377,7 @@ tn, fp, fn, tp: 177 5 26 4
 Correct predictions  : 181
 Number of predictions: 212
 Balanced Accuracy    : 0.553
-Mean Inference time  : 0.1654982566833496
+Mean Inference time  : 0.20090317726135254
 
 data/stroke-data-discretized-train.csv
 
@@ -24090,5 +24090,5 @@ tn, fp, fn, tp: 882 37 30 10
 Correct predictions  : 892
 Number of predictions: 959
 Balanced Accuracy    : 0.605
-Mean Inference time  : 0.6046044826507568
+Mean Inference time  : 0.7103793621063232
 
