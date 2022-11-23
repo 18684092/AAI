@@ -9,8 +9,10 @@
 import json
 import math
 import sys
+import time
 from sklearn.metrics import confusion_matrix, balanced_accuracy_score, roc_curve, auc, brier_score_loss, f1_score
 import numpy as np
+import random
 
 # My imports
 from Combinations import Combinations
@@ -42,8 +44,11 @@ class NaiveBayes:
         self.avoidZeros = self.commonSettings['avoidzeros']
         self.positivePred = self.bayesConfig["positiveprediction" + str(n)]
         self.KLConstant = float(self.commonSettings['klconstant'])
+        self.pSampling = self.bayesConfig["priorsampling" + str(n)]
+        self.pSampleCount = int(self.bayesConfig["priorsamples" + str(n)])
+        self.gaussian = self.bayesConfig["gaussian" + str(n)]
+        self.rejection = self.bayesConfig["rejection" + str(n)]
 
-        
         try:
             self.dp = int(self.commonSettings['decimalplaces'])
         except:
@@ -63,6 +68,7 @@ class NaiveBayes:
         self.bestResults['BestStructure'] = []
         self.numberStructures = 0
         self.overrideDisplay = False
+        self.oldListVars = []
         
         # Dictionary to hold discrete learnt probabilities
         self.discretes = {}
@@ -74,9 +80,17 @@ class NaiveBayes:
         # These are added due to replacing Pandas dataframes with my own code for holding data
         self.rawDataDict = {}
         self.randVariables = []
+        self.averages = {}
+        self.stds = {}
         
         # Do functions for learn or test mode
-        if not self.test:
+        if not self.test and self.gaussian == "False" and self.queries == None:
+            # Delete results file
+            open(self.outFile + "-results.txt", 'w').close()
+
+            trainStart = time.time()
+            self.showS("Training on " + self.fileName)
+            self.showS("------------" + '-' * len(self.fileName))
             self.readFile(self.fileName)
             #self.makeStructure(self.fileName)
             self.countRows()
@@ -85,12 +99,25 @@ class NaiveBayes:
             self.learn()
             self.saveLearnt()
             self.saveLearntText()
-            self.displayLearnt()          
-        elif self.test:
+            self.displayLearnt() 
+            trainEnd = time.time()  
+            self.showS()
+            self.showS("Training time: " + str(round(trainEnd - trainStart, self.dp)) + " seconds")
+            self.showS()    
+            if self.pSampling == "True":
+                self.priorSampling()
+
+        elif self.test  and self.queries == None and self.gaussian == "False":
+            
+            testStart = time.time()
+            self.showS("Testing on " + self.fileNameTest)
+            self.showS('-' * len("Testing on " + self.fileNameTest))
+            self.oldListVars = self.listVars
             combos = self.createStructures()
             combos.insert(0,self.listVars)
             self.numberStructures = len(combos)
             self.readFile(self.fileName)
+
             self.loadLearnt()
             self.countRows()
             self.getDiscreteVariables()
@@ -102,10 +129,388 @@ class NaiveBayes:
                 else: 
                     self.overrideDisplay = False
                 self.listVars = v
-                
                 self.readTestQueries()
                 self.answerQueries(i)
-            #print(self.bestResults[self.bestResults['BestStructureI']])
+            endTest = time.time()
+            self.showS()
+            self.showS("Testing time: " + str(round(endTest - testStart, self.dp)) + " seconds to find the best structure from " + str(len(combos)) + " structures")
+            self.showS() 
+
+            # Test queries taken from config
+        elif self.test and self.queries != None and self.queries != [] and self.gaussian == "False":
+            self.loadLearnt()
+            self.readTestQueries()
+            self.total = 1
+            self.getDiscreteVariables()
+            self.getDiscretePriors()
+
+            # Standard query answering
+            for query in self.queries:
+                self.show("\nQuery: " + query)
+                self.questions = []
+                self.variables = []
+                q = query.split('|')[1].replace(')','').split(',')
+                a = []
+                for attrib in q:
+                    a.append(attrib.split("=")[1].replace("'",''))
+                self.questions.append(a)
+                for v in q:
+                    self.variables.append(v.split('=')[0].replace("'",''))
+                self.variables.append(self.given)
+                self.answerQuery(0, query)
+
+            if self.rejection == "True":
+                # Prior query answering
+                for query in self.queries:
+                    self.show("\nUsing Rejection Sampling\nQuery: " + query)
+                    self.questions = []
+                    self.variables = []
+                    q = query.split('|')[1].replace(')','').split(',')
+                    a = []
+                    for attrib in q:
+                        a.append(attrib.split("=")[1].replace("'",''))
+                    self.questions.append(a)
+                    for v in q:
+                        self.variables.append(v.split('=')[0].replace("'",''))
+                    self.variables.append(self.given)
+                    q = {}
+                    for i,v in enumerate(self.variables):
+                        if v != self.given:
+                            q[v] = self.questions[0][i]
+                    self.rejectionSampling(self.variables, query,q)
+            
+        elif self.gaussian == "True" and not self.test:
+            # Gaussian
+            # Learn Gaussian
+            open(self.outFile + "-gaussian-results.txt", 'w').close()
+            self.showG("Gaussian learning of means/std devs for " + str(self.fileName))
+            start = time.time()
+            self.readFile(self.fileName)
+            for key in self.rawDataDict.keys():
+                if key != self.given:
+                    self.variableAvg(key, self.given)
+                    self.variableSTD(key, self.given)
+            end = time.time()
+            self.showG("Gaussian learning time:" + str(end-start))
+            self.showG()
+            # Predict on test file
+            self.gaussianProb()
+
+    
+
+    ############
+    # gaussian #
+    ############
+    def gaussianProb(self):
+        start = time.time()
+        self.readTestQueries()
+        acc = 0
+        y = []
+        yHat = []
+        infTimes = [] 
+        tru = []           
+
+        for variables in self.questions:
+            for index, value in enumerate(variables):
+                if self.variables[index] == self.given:
+                    tru.append(int(value))
+
+        # For each row in test file
+        for variables in self.questions:
+            iStart = time.time()
+            probT = []
+            probF = []
+            truth = 0
+
+            # for each variable's value in each roow
+            for index, value in enumerate(variables):
+                if self.variables[index] != self.given:
+                    # Grab precalculated means / std
+                    vMeanT = self.averages[self.variables[index]]['avgT']
+                    vMeanF = self.averages[self.variables[index]]['avgF']
+                    vStdT = self.stds[self.variables[index]]['stdT']
+                    vStdF = self.stds[self.variables[index]]['stdF']
+                    # The value being calculated
+                    x = value
+
+                    # Probabilities
+                    eT = -0.5 * ((float(x)-vMeanT) / vStdT) * ((float(x)-vMeanT) / vStdT)
+                    eF = -0.5 * ((float(x)-vMeanF) / vStdF) * ((float(x)-vMeanF) / vStdF)
+                    pT = (1 / (vStdT * math.sqrt(2 * math.pi))) * math.exp(eT)
+                    pF = (1 / (vStdF * math.sqrt(2 * math.pi))) * math.exp(eF)
+                    probT.append(pT)
+                    probF.append(pF)
+                elif self.variables[index] == self.given:
+                    # the target truth
+                    truth = int(value)
+
+
+            iEnd = time.time()
+            infTimes.append(iEnd-iStart)
+
+            # Metrics
+            T = sum(tru) / len(tru)
+            F = 1 - T
+            # This is for non log - just MLE
+            for p in probT:
+                T += p
+            for p in probF:
+                F += p
+
+            # Normalise
+            normT = T/(T+F)
+            normF = F/(T+F)
+
+            # How's the prediction looing
+            predict = 0
+            if normT > normF:
+                predict = int(self.positivePred)
+            answer = "wrong"
+            if predict == truth:
+                answer = "correct"
+                acc +=1
+                yHat.append(1)
+            else:
+                yHat.append(0)
+            y.append(truth)
+            self.showG(str(normT) + ", " + str(normF) + ", " + str(predict) + ", " + str(truth) + ", " + str(answer))
+        self.showG()
+        self.showG("STD Accuracy: " + str(acc/len(self.questions)))
+        self.showG("Balanced Acc: " + str(balanced_accuracy_score(y, yHat)))
+        (tn, fp, fn, tp) = confusion_matrix(y,yHat).ravel()
+        self.showG("Confusion matrix: TN:" + str(tn) + " FP:" + str(fp) + " FN:" + str(fn) + " TP:" + str(tp))
+        end = time.time()
+        self.showG("Overall Test time: " + str(end-start))
+        self.showG("Mean inference time: " + str(sum(infTimes)/ len(infTimes)))
+        fpr, tpr, _ = roc_curve(y, yHat, pos_label=int(self.positivePred))
+        a = auc(fpr, tpr)
+        self.showG("AUC: " + str(a))
+        self.showG("F1-score: " + str(f1_score(y, yHat, pos_label=int(self.positivePred))))
+
+
+        pass
+
+    ###############
+    # variableAVG #
+    ###############
+    def variableAvg(self, variable, target):
+        self.averages[variable] = {self.positivePred:0, '0':0, 'countT':0, 'countF':0, 'avgT':0, 'avgF':0}
+        for value, y in zip(self.rawDataDict[variable], self.rawDataDict[target]):
+            if y == self.positivePred:
+                self.averages[variable][self.positivePred] += float(value)
+                self.averages[variable]['countT'] += 1
+                self.averages[variable]['avgT'] = self.averages[variable][self.positivePred] / self.averages[variable]['countT']
+            else:
+                self.averages[variable]['0'] += float(value)
+                self.averages[variable]['countF'] += 1
+                self.averages[variable]['avgF'] = self.averages[variable]['0'] / self.averages[variable]['countF']
+
+    ###############
+    # variableSTD #
+    ###############
+    def variableSTD(self, variable, target):
+        self.stds[variable] = { 'stdT':0, 'stdF':0}
+        for value, y in zip(self.rawDataDict[variable], self.rawDataDict[target]):
+            if y == self.positivePred:
+                v = (float(value) - self.averages[variable]['avgT'])
+                self.stds[variable]['stdT'] +=  v * v
+            else:
+                v = (float(value) - self.averages[variable]['avgF'])
+                self.stds[variable]['stdF'] += v * v
+
+        # Divide by n - 1 for sample
+        self.stds[variable]['stdT'] /= self.averages[variable]['countT'] - 1
+        self.stds[variable]['stdF'] /= self.averages[variable]['countF'] - 1
+        self.stds[variable]['stdT'] = math.sqrt(self.stds[variable]['stdT'])
+        self.stds[variable]['stdF'] = math.sqrt(self.stds[variable]['stdF'])
+
+    #####################        
+    # rejectionSampling #
+    #####################        
+    def rejectionSampling(self, vars, query, q):
+        '''
+        Reproduce samples with the same distribution as
+        the original distribution based upon CPTs
+        '''
+        start = time.time()
+        # Move given/target to the back - order vars
+        for index, var in enumerate(self.listVars):
+            if var == self.given:
+                self.listVars += [self.listVars.pop(index)]
+                break
+        samples = []
+        
+        targetCount = 0
+        count = 0
+
+        # we want a minimum of 100 samples
+        while count < self.pSampleCount or targetCount < 100:#targetAchieved == False:
+            sample = []
+
+            # I don't think we need to sample the target=0 and =1 prior, but...I am :)
+            target = '0'
+            targetProb = self.learnt["P("+self.given+"='0')"][1]
+            rnT = random.uniform(0,1)
+            
+            if rnT > 0.5: #targetProb:
+                target = '1'  
+
+            for variable in self.listVars:
+                if variable == self.given: continue
+                if variable not in vars: continue
+                priorDict = {}
+                for pProb in self.learnt.keys():
+                    if "P(" + variable + "=" in pProb and "|"+self.given+"='" +target+"'" in pProb:
+                        line = self.learnt[pProb]
+                        priorDict[pProb] = line[1]
+                # Sort key values - makes assigning random pick easier
+                priorDict = {k: v for k, v in sorted(priorDict.items(), key=lambda item: item[1])}
+                # Pick one of the atrributes as part of sample
+                choose = []
+                while len(choose) == 0:
+                    rn = random.uniform(0,1)
+                    lower = 0
+                    for index,pProb in enumerate(priorDict.keys()):
+                        if rn > lower and rn <= priorDict[pProb] + lower:# or index == len(priorDict.keys())-1:
+                            var = pProb.split("|")[0].replace("P(","")
+                            v = pProb.split("|")[0]
+                            v = v.replace("P("+variable+"='",'').replace("'","")
+                            choose.append(var)
+                        lower = priorDict[pProb]
+                
+                # If 2 or more samples were picked - they have same prob
+                # choose one of them
+                if len(choose) != 0:
+                    rn2 = random.randint(0, len(choose) - 1)
+                    sample.append(choose[rn2])
+                    count += 1
+
+            sample.append(target)
+
+            # Just check that we have enough samples that match - it is said
+            # that 100 samples are needed
+            found = True
+            for v in sample:
+                if v not in query:
+                    found = False
+                    break
+            if found == True:
+                targetAchieved = True
+                targetCount += 1
+
+            # A valid sample has been found
+            if len(sample) == len(vars):     
+                samples.append(sample)
+
+        # MMMMmmmmmm..... I might be drunk :)
+        T = 0; F = 0
+        for s in samples:
+            a = []
+            for v in q.keys():
+                a.append(v+"='"+q[v]+"'")
+            t = a.copy(); f = a.copy(); tr = a.copy(); fr = a.copy(); tr.reverse()
+            fr.reverse(); tr.append('1'); fr.append('0'); t.append('1'); f.append('0')
+            if s == t or s == tr: T +=1
+            if s == f or s == fr: F +=1
+        
+        end = time.time()
+        self.show("Samples requested: " + str(self.pSampleCount) + " Samples needed: " +str(count))
+        self.show("Counts     <"+self.given + "='" + self.positivePred + "'=" + str(T) + " , <"+self.given + "='0'=" + str(F) + ">")
+        self.show("Normalised <"+self.given + "='" + self.positivePred + "'=" + str(T/(T+F)) + " , "+self.given + "='0'=" + str(F/(T+F)) + ">")
+        self.show("Inference time: " + str(end - start) + " seconds")
+        self.show()
+
+    #################        
+    # priorSampling #
+    #################        
+    def priorSampling(self):
+        '''
+        Reproduce samples with the same distribution as
+        the original distribution based upon CPTs
+        '''
+        # Move given/target to the back - order vars
+        for index, var in enumerate(self.listVars):
+            if var == self.given:
+                self.listVars += [self.listVars.pop(index)]
+                break
+        samples = []
+        count = 0
+        # We need a certain amount of samples
+        while len(samples) != self.pSampleCount:
+            sample = []
+            for variable in self.listVars:
+                if variable == self.given: continue
+                priorDict = {}
+                # Pick target
+                rn = random.uniform(0,1)
+                target = '0'
+                if rn >= 0.5:
+                    target = '1'
+
+                for pProb in self.learnt.keys():
+                    if "P(" + variable + "=" in pProb and "|"+self.given+"='"+target in pProb:
+                        line = self.learnt[pProb]
+                        priorDict[pProb] = line[1]
+                # Sort key values - makes assigning random pick easier
+                priorDict = {k: v for k, v in sorted(priorDict.items(), key=lambda item: item[1])}
+
+                # Pick one of the atrributes as part of sample
+                choose = []
+                while len(choose) == 0:
+                    rn = random.uniform(0,1)
+                    for index,pProb in enumerate(priorDict.keys()):
+                        if rn < priorDict[pProb]: # replace target=
+                            v = pProb.replace("P("+variable+"='",'').replace("'|" + self.given + "='" + target + "')", '')
+                            choose.append(v)
+                # If 2 or more samples were picked - they have same prob
+                # choose one of them
+                if len(choose) != 0:
+                    rn2 = random.randint(0, len(choose) - 1)
+                    sample.append(choose[rn2])
+            # A valid sample has been found
+            if len(sample) == len(self.listVars) - 1:    
+                sample.append(target)    
+                samples.append(sample)
+        # Write samples to CSV file - we can then test against this
+        with open(self.outFile + "-priors.csv", 'w') as fp:
+            for index, variable in enumerate(self.listVars):
+                fp.write(variable)
+                if index < len(self.listVars) - 1:
+                    fp.write(',')
+            fp.write('\n')
+            for sample in samples:
+                for index, attribute in enumerate(sample):
+                    fp.write(attribute)
+                    if index < len(sample) - 1:
+                        fp.write(',')
+                fp.write('\n')
+            
+    ###############
+    # answerQuery #
+    ###############
+    def answerQuery(self,i, query):
+        '''
+        Main function that takes each line of a test file
+        (which I call questions / queries) and produces an
+        answer for each row. Discrete values have been
+        previously learnt.
+        '''
+        self.show()
+        # Log and standard have different math operations
+        char = " * "    
+        if self.commonSettings['log'] == 'True':
+            char = " + "
+
+        for question in self.questions:
+            answers = self.getAnswers(question)
+            self.displayAnswers(answers, char)
+            results = self.enumerateAnswers(answers, char)
+            results = self.constructResult(results)
+            results = self.normaliseResults(results)
+            prediction, probability = self.argMaxPrediction(results)
+            self.show()
+            self.show(self.given + "=" + str(prediction) + " with a prob of " + str(round(probability,self.dp)))
+            self.show()
 
     ############
     # readFile #
@@ -143,7 +548,7 @@ class NaiveBayes:
         of different structures.
         '''
         combos = []
-        if self.findBestStrure:
+        if self.findBestStrure == 'True':
             for n in range(1,len(self.listVars)-1):
                 evidence = []
                 for a in self.listVars:
@@ -191,6 +596,38 @@ class NaiveBayes:
                 f.write(str(line))
                 f.write(endLine)
 
+    ########
+    # show #
+    ########
+    def showS(self, line = '', endLine = '\n'):
+        '''
+        Either prints to screen, writes to a results file
+        or both.
+        '''
+
+        if self.commonSettings['display'] == 'True':
+            print(str(line), end=endLine)
+
+        with open(self.outFile + "-results.txt", 'a') as f:
+            f.write(str(line))
+            f.write(endLine)
+
+    ########
+    # show #
+    ########
+    def showG(self, line = '', endLine = '\n'):
+        '''
+        Either prints to screen, writes to a results file
+        or both.
+        '''
+
+        if self.commonSettings['display'] == 'True':
+            print(str(line), end=endLine)
+
+        with open(self.outFile + "-gaussian-results.txt", 'a') as f:
+            f.write(str(line))
+            f.write(endLine)
+
     #################
     # readQuestions #
     #################
@@ -222,7 +659,6 @@ class NaiveBayes:
                     self.questions.append(qs)
                 count += 1
 
-
     ###########  
     # getQPos #
     ###########  
@@ -240,7 +676,6 @@ class NaiveBayes:
         d = discrete[2:-1].split('|')
         d = d[0].split('=')
         return d[0]
-
 
     #################
     # getJointProbs #
@@ -264,7 +699,6 @@ class NaiveBayes:
                 except:
                     # This is a hack - but it works
                     del answers[discrete]
-        
         return answers
 
     ###################
@@ -389,7 +823,7 @@ class NaiveBayes:
         previously learnt.
         '''
         # For basic metrics
-        # NOTE extend so using ones mentioned in ASS Brief
+        
         self.bestResults[i] = {}
         self.bestResults[i]['Structure'] = self.listVars
         self.bestResults[i]['TotalQueries'] = 0
@@ -399,7 +833,8 @@ class NaiveBayes:
         self.bestResults[i]['Y_prob'] = []
         self.bestResults[i]['Y_prob_pred'] = []
 
-        
+        meanInfTime = []
+
         # Get position of the target variable
         qPosition = self.getQPos()
         # Log and standard have different math operations
@@ -414,7 +849,10 @@ class NaiveBayes:
         self.show("Test Results")
         self.show("------------")
         self.show()
-        
+
+        # Start timer() to record inference time
+        start = time.time()
+
         for question in self.questions:
             answers = self.getAnswers(question)
             self.displayAnswers(answers, char)
@@ -438,6 +876,11 @@ class NaiveBayes:
                 self.show("Wrong")            
             self.show()
 
+        # Record time taken
+        end = time.time()
+        meanInfTime.append(end-start)
+        self.bestResults[i]['InferenceT'] = end - start
+
         self.bestResults[i]['balanced'] = balanced_accuracy_score(self.bestResults[i]['Y_true'], self.bestResults[i]['Y_pred']) 
         fpr, tpr, _ = roc_curve(self.bestResults[i]['Y_true'], self.bestResults[i]['Y_prob'], pos_label=self.positivePred)
         self.bestResults[i]['auc'] = auc(fpr, tpr)
@@ -456,22 +899,43 @@ class NaiveBayes:
         except:
             # We are here is there is not enough tests as in the 
             # play_tennis example
+            self.bestResults[i]['Confusion'] = {}
             pass
 
         self.show(self.listVars)
         self.show("Correct predictions  : " + str(self.bestResults[i]['Correct']))
         self.show("Number of predictions: " + str(self.bestResults[i]['TotalQueries']))
         self.show("Balanced Accuracy    : " + str(round(self.bestResults[i]['balanced'] , self.dp)))
+        self.show("Mean Inference time  : " + str(sum(meanInfTime)/len(meanInfTime)))
         self.show()
 
-        # Is this the best structure
+        # Is this the best structure?
+        # Hill Climbing network structures
         if self.bestResults[i]['balanced'] > self.bestResults['BestAcc']:
             self.bestResults['BestAcc'] = self.bestResults[i]['balanced']  
             self.bestResults['BestStructure'] = self.listVars
             self.bestResults['BestStructureI'] = i
-            print("Best Structure: " +str(self.bestResults['BestStructure']) + " Bal Acc: " + str(round(self.bestResults[i]['balanced'] * 100.0, self.dp)) + "% Combos tried: " + str(self.numberStructures))
-            print("AUC:", self.bestResults[i]['auc'], "KL:", self.bestResults[i]['kl'], "Brier:", self.bestResults[i]['brier'], "Acc:", self.bestResults[i]['accuracy'], "LL:", self.bestResults[i]['LL'], "BIC:", self.bestResults[i]['BIC'], "F1:", self.bestResults[i]['F1'])
-            
+            self.showS("Structure #" + str(i) + " " * (17 - len("Structure #" + str(i) + " ")) + " : P(" + self.given + "|", "")
+            for index,variable in enumerate(self.bestResults[i]['Structure']):
+                #print(index,variable)
+                if variable != self.given:
+                    self.showS(variable, "")
+                if index < len(self.bestResults[i]['Structure']) - 1 and index > 0:
+                    self.showS(",", "")
+            self.showS(")")
+            self.showS("Log Likelihood   : " + str(round(self.bestResults[i]['LL'], self.dp)))
+            self.showS("BIC score        : " + str(round(self.bestResults[i]['BIC'], self.dp)))
+            self.showS("Test results")
+            self.showS("------------")
+            self.showS("Balanced Acc     : " + str(round(self.bestResults[i]['balanced'] * 100.0, self.dp)) + "%")
+            self.showS("Std Accuracy     : " + str(round(self.bestResults[i]['accuracy'] * 100, self.dp)) + "%")
+            self.showS("Area under curve : " + str(round(self.bestResults[i]['auc'], self.dp)))
+            self.showS("KL divergence    : " + str(round(self.bestResults[i]['kl'], self.dp)))
+            self.showS("Brier score      : " + str(round(self.bestResults[i]['brier'], self.dp)))
+            self.showS("F1-score         : " + str(round(self.bestResults[i]['F1'], self.dp)))
+            self.showS("Confusion matrix : " + str(self.bestResults[i]['Confusion']))
+            self.showS("Inference time   : " + str(round(self.bestResults[i]['InferenceT'], self.dp)) + " seconds")
+            self.showS()
 
     #################
     # logLikelihood #
@@ -491,7 +955,7 @@ class NaiveBayes:
                             search = "P(" + variable + "='" + attribute + "'|" + self.given +"='"+str(self.rawDataDict[self.given][index]) + "')"
                             value = self.learnt[search][1]
                             LL += math.log(value)
-                        if variable == self.given:
+                        elif variable == self.given:
                             # get log(P(given=rawY)) from learnt
                             search = "P(" + self.given +"='"+str(self.rawDataDict[self.given][index]) + "')"
                             value = self.learnt[search][1]
@@ -501,16 +965,14 @@ class NaiveBayes:
     ########################
     # baysianInfoCriterion #
     ########################    
+    # Taken from workshop material but modified to match own method.
+    # Overall function simplified
     def baysianInfoCriterion(self, LL):
         penalty = 0
         for variable in self.listVars:
             # number of params = number of P(variable=attrib|given) or P(variable=attrib) if it is a predictor var  
-            num_params = self.numberOfParams(variable)
-            local_penalty = (math.log(self.total)*num_params)/2
-            penalty += local_penalty
-
+            penalty += (math.log(self.total) * self.numberOfParams(variable)) / 2
         BIC = LL - penalty
-
         return BIC
 
     ##################
@@ -542,6 +1004,7 @@ class NaiveBayes:
     ################
     # KLDivergence #
     ################
+    # Taken from workshop example code but modified
     def KLDivergence(self,results):
         '''
         Calculate KL divergence
@@ -551,7 +1014,6 @@ class NaiveBayes:
         P = np.asarray(Y_true) + self.KLConstant
         Q = np.asarray(results['Y_prob']) + self.KLConstant
         return np.sum(P * np.log(P/Q))
-
 
     #########
     # brier #
@@ -623,6 +1085,7 @@ class NaiveBayes:
         All learning probabilities can be displayed or logged.
         '''
         self.show(self.fileName)
+        self.show()
         self.show("Conditional Probability Tables")
         self.show("------------------------------")
         for item in self.learnt.items():
@@ -819,9 +1282,8 @@ def main(argv):
     # Clear log file on run
     open(common['logfile'], 'w').close()
     
-    # NOTE reduce 10 to number of files in config
-    # needs to be automated 
-    for n in range(1, 6):
+    # the exception will catch index errors
+    for n in range(1, 20):
         try:
             # Queries for this network
             q = [queries[key] for key in queries.keys() if "query"+str(n) in key]
@@ -829,18 +1291,14 @@ def main(argv):
             # Learn and save results
             NB = NaiveBayes(bayesConfig, n, False, common)
             # Test and save results
+            NB = NaiveBayes(bayesConfig, n, True, common)
+            # Run queries
             NB = NaiveBayes(bayesConfig, n, True, common, q)
-        
         # Only need except due to for loop
         except KeyError as e:
-            print("All tests have been run. Please see results folder.",e)
+            print("All tests have been run. Please see results folder.")
             quit()
-        else:
-            #print(common)
-            print()
-            #print(bayesConfig)
-            #print()
-            #print(queries)
+
 
 ##################
 # start properly #

@@ -1,0 +1,7 @@
+Training on results/stroke-priors.csv
+-------------------------------------
+
+Training time: 0.011 seconds
+
+Testing on data/stroke-data-discretized-test.csv
+------------------------------------------------
