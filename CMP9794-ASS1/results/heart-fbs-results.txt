@@ -45,7 +45,7 @@ KL divergence    : 51.621
 Brier score      : 0.739
 F1-score         : 0.222
 Confusion matrix : {'TN': 180, 'FP': 2, 'FN': 26, 'TP': 4}
-Inference time   : 0.007 seconds
+Inference time   : 0.008 seconds
 
 Structure #23    : P(fbs|target,age,sex,cp,trestbps,chol,restecg,thalach,slope,ca,thal)
 Log Likelihood   : -9362.766
@@ -90,5 +90,5 @@ Confusion matrix : {'TN': 181, 'FP': 1, 'FN': 25, 'TP': 5}
 Inference time   : 0.006 seconds
 
 
-Testing time: 70.769 seconds to find the best structure from 8191 structures
+Testing time: 71.104 seconds to find the best structure from 8191 structures
 

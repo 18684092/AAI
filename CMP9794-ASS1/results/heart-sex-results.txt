@@ -1,7 +1,7 @@
 Training on data/heart-data-discretized-train.csv
 -------------------------------------------------
 
-Training time: 0.013 seconds
+Training time: 0.012 seconds
 
 Testing on data/heart-data-discretized-test.csv
 -----------------------------------------------
@@ -17,7 +17,7 @@ KL divergence    : 60.536
 Brier score      : 0.231
 F1-score         : 0.836
 Confusion matrix : {'TN': 42, 'FP': 18, 'FN': 30, 'TP': 122}
-Inference time   : 0.211 seconds
+Inference time   : 0.204 seconds
 
 Structure #2     : P(sex|target,age,cp,trestbps,chol,fbs,restecg,thalach,exang,oldpeak,slope,thal)
 Log Likelihood   : -9604.562
@@ -104,5 +104,5 @@ Confusion matrix : {'TN': 47, 'FP': 13, 'FN': 30, 'TP': 122}
 Inference time   : 0.006 seconds
 
 
-Testing time: 71.528 seconds to find the best structure from 8191 structures
+Testing time: 71.396 seconds to find the best structure from 8191 structures
 

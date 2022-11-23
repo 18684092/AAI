@@ -1,7 +1,7 @@
 Training on data/stroke-data-discretized-train.csv
 --------------------------------------------------
 
-Training time: 0.044 seconds
+Training time: 0.043 seconds
 
 Testing on data/stroke-data-discretized-test.csv
 ------------------------------------------------
@@ -17,7 +17,7 @@ KL divergence    : 61.568
 Brier score      : 0.851
 F1-score         : 0.23
 Confusion matrix : {'TN': 882, 'FP': 37, 'FN': 30, 'TP': 10}
-Inference time   : 0.71 seconds
+Inference time   : 0.763 seconds
 
 Structure #4     : P(stroke|gender,age,hypertension,heart_disease,ever_married,work_type,avg_glucose_level,bmi,smoking_status)
 Log Likelihood   : -33148.016
@@ -34,5 +34,5 @@ Confusion matrix : {'TN': 879, 'FP': 40, 'FN': 29, 'TP': 11}
 Inference time   : 0.026 seconds
 
 
-Testing time: 32.661 seconds to find the best structure from 1023 structures
+Testing time: 32.626 seconds to find the best structure from 1023 structures
 
