@@ -502,14 +502,17 @@ class NaiveBayes:
             char = " + "
 
         for question in self.questions:
+            start = time.time()
             answers = self.getAnswers(question)
             self.displayAnswers(answers, char)
             results = self.enumerateAnswers(answers, char)
             results = self.constructResult(results)
             results = self.normaliseResults(results)
             prediction, probability = self.argMaxPrediction(results)
+            end = time.time()
             self.show()
             self.show(self.given + "=" + str(prediction) + " with a prob of " + str(round(probability,self.dp)))
+            self.show("Inference time: " + str(end - start))
             self.show()
 
     ############

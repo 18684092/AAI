@@ -1,5 +1,5 @@
 Gaussian learning of means/std devs for data/heart-data-original-train.csv
-Gaussian learning time:0.004589557647705078
+Gaussian learning time:0.004593610763549805
 
 0.5006618152277208, 0.4993381847722792, 1, 0, wrong
 0.5258696348245584, 0.4741303651754415, 1, 0, wrong
@@ -217,7 +217,7 @@ Gaussian learning time:0.004589557647705078
 STD Accuracy: 0.7830188679245284
 Balanced Acc: 0.6754715294538304
 Confusion matrix: TN:40 FP:59 FN:6 TP:107
-Overall Test time: 0.005461692810058594
-Mean inference time: 1.031722662583837e-05
+Overall Test time: 0.005491733551025391
+Mean inference time: 1.0111421908972398e-05
 AUC: 0.6754715294538303
 F1-score: 0.7670250896057348

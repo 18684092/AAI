@@ -17,7 +17,7 @@ KL divergence    : 68.47
 Brier score      : 0.575
 F1-score         : 0.643
 Confusion matrix : {'TN': 117, 'FP': 33, 'FN': 17, 'TP': 45}
-Inference time   : 0.198 seconds
+Inference time   : 0.2 seconds
 
 Structure #1     : P(exang|target,age,sex,cp,trestbps,chol,fbs,restecg,thalach,oldpeak,slope,ca)
 Log Likelihood   : -9603.753
@@ -87,7 +87,7 @@ KL divergence    : 62.074
 Brier score      : 0.573
 F1-score         : 0.701
 Confusion matrix : {'TN': 123, 'FP': 27, 'FN': 14, 'TP': 48}
-Inference time   : 0.007 seconds
+Inference time   : 0.006 seconds
 
 Structure #876   : P(exang|age,sex,cp,trestbps,chol,fbs,restecg,thalach,thal)
 Log Likelihood   : -7418.065
@@ -118,5 +118,5 @@ Confusion matrix : {'TN': 126, 'FP': 24, 'FN': 15, 'TP': 47}
 Inference time   : 0.005 seconds
 
 
-Testing time: 71.802 seconds to find the best structure from 8191 structures
+Testing time: 71.108 seconds to find the best structure from 8191 structures
 
